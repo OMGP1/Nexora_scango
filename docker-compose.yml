@@ -312,7 +312,6 @@ services:
       - OPENSEARCH_URL=http://opensearch:9200
       - MINIO_ENDPOINT=minio
       - BACKEND_HOST=api-gateway
-      - MONGO_URI=mongodb://scango:scango_dev_pass@mongo:27017/scango_catalog?authSource=admin
 
   payment-service:
     image: node:20-alpine
