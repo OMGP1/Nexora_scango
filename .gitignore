@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+
+# Turbo
+.turbo/
+
+# Docker
+docker-compose.override.yml
+
+# Keys / Certs
+*.pem
+*.key
+*.cert
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup

@@ -1,0 +1,46 @@
+[
+  {
+    "sku": "SKU1001",
+    "barcode": "8901030875021",
+    "name": "Tata Salt 1kg",
+    "description": "Iodized salt",
+    "unit_price": 28,
+    "tax_class": "GST_5",
+    "is_weight_based": false,
+    "is_age_restricted": false,
+    "uom": "EA"
+  },
+  {
+    "sku": "SKU1002",
+    "barcode": "8901030875022",
+    "name": "Amul Butter 500g",
+    "description": "Pasteurised butter",
+    "unit_price": 270,
+    "tax_class": "GST_12",
+    "is_weight_based": false,
+    "is_age_restricted": false,
+    "uom": "EA"
+  },
+  {
+    "sku": "SKU2001",
+    "barcode": "000000002001",
+    "name": "Bananas",
+    "description": "Fresh yellow bananas",
+    "unit_price": 40,
+    "tax_class": "GST_0",
+    "is_weight_based": true,
+    "is_age_restricted": false,
+    "uom": "KG"
+  },
+  {
+    "sku": "SKU3001",
+    "barcode": "8901030875024",
+    "name": "Kingfisher Premium Beer 500ml",
+    "description": "Premium lager beer",
+    "unit_price": 160,
+    "tax_class": "GST_28",
+    "is_weight_based": false,
+    "is_age_restricted": true,
+    "uom": "EA"
+  }
+]

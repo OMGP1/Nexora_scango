@@ -1,0 +1,112 @@
+# =====================================================
+# ScanGo CI Pipeline — Lint, Type Check, Test, Build
+# =====================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  lint-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx turbo run lint
+      - run: npx turbo run typecheck
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: scango
+          POSTGRES_PASSWORD: scango_dev_pass
+          POSTGRES_DB: scango_main
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx turbo run test
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: scango
+          POSTGRES_PASSWORD: scango_dev_pass
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+  build:
+    name: Build All Packages
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx turbo run build
+
+  docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        service:
+          - identity-service
+          - session-service
+          - catalog-service
+          - cart-service
+          - inventory-service
+          - verification-service
+          - payment-service
+          - promo-service
+          - notification-service
+          - audit-service
+          - analytics-service
+          - api-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build -t scango/${{ matrix.service }}:${{ github.sha }} \
+            -f services/${{ matrix.service }}/Dockerfile \
+            services/${{ matrix.service }}/

@@ -1,0 +1,26 @@
+{
+  "name": "@scango/kafka",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@nestjs/throttler": "^6.5.0",
+    "@scango/common": "*",
+    "helmet": "^8.3.0",
+    "kafkajs": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.5.0"
+  }
+}

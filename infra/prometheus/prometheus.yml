@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "scango-services"
+    # Assuming services expose /metrics via Prometheus endpoint. We can use host.docker.internal or scrape across a docker network.
+    # We will use host.docker.internal for local docker-compose network since services run on host in dev, or inside docker.
+    # Actually, in our setup, the NestJS services are run on the host via `npm run dev` typically. Let's use host.docker.internal
+    static_configs:
+      - targets:
+        - "host.docker.internal:3001" # Auth
+        - "host.docker.internal:3002" # Store Identity
+        - "host.docker.internal:3003" # Session
+        - "host.docker.internal:3004" # Catalog
+        - "host.docker.internal:3005" # Cart
+        - "host.docker.internal:3006" # Pricing
+        - "host.docker.internal:3007" # Inventory
+        - "host.docker.internal:3008" # Promo
+        - "host.docker.internal:3009" # Payment
+        - "host.docker.internal:3010" # Audit
+        - "host.docker.internal:3011" # Notification
