@@ -10,7 +10,21 @@ import morgan from 'morgan';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { v4 as uuidv4 } from 'uuid';
 import * as jwt from 'jsonwebtoken';
+import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { createLogger, SERVICE_PORTS, JwtPayload } from '@scango/common';
+
+// Initialize Firebase Admin with service account credentials when available
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  initializeApp({
+    credential: applicationDefault(),
+    projectId: process.env.FIREBASE_PROJECT_ID,
+  });
+} else if (process.env.FIREBASE_PROJECT_ID) {
+  initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID });
+} else {
+  initializeApp({ projectId: 'demo-scango-local' });
+}
 
 const logger = createLogger('api-gateway');
 const PORT = process.env.API_GATEWAY_PORT || SERVICE_PORTS.API_GATEWAY;
@@ -22,8 +36,8 @@ const app = express();
 // CORS
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow any localhost port in development
-    if (!origin || origin.startsWith('http://localhost:')) {
+    // Allow any localhost port in development and any Vercel domain for the frontend
+    if (!origin || origin.startsWith('http://localhost:') || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -57,7 +71,7 @@ app.use((_req, res, next) => {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'scango-dev-jwt-secret-change-in-production';
 
-app.use('/api/v1', (req, res, next) => {
+app.use('/api/v1', async (req, res, next) => {
   // Skip auth for health endpoints and auth routes
   if (req.path.includes('/health') || req.path.startsWith('/auth')) {
     return next();
@@ -77,7 +91,22 @@ app.use('/api/v1', (req, res, next) => {
   }
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    let payload: any;
+    
+    // Check if token is our local JWT or a Firebase token
+    // For local dev, if it's a short test token or firebase isn't verifying, fallback to local JWT
+    try {
+      const decodedToken = await getAuth().verifyIdToken(token);
+      payload = {
+        sub: decodedToken.uid,
+        role: decodedToken.role || 'guest',
+        store_id: decodedToken.store_id || 'STORE_001',
+        type: decodedToken.role ? 'staff' : 'guest',
+      };
+    } catch (firebaseErr) {
+      // Fallback for local development if Firebase verification fails (e.g., using old local JWTs)
+      payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    }
     
     // Inject user context headers
     req.headers['x-user-id'] = payload.sub;
@@ -93,7 +122,7 @@ app.use('/api/v1', (req, res, next) => {
 
     next();
   } catch (err) {
-    logger.warn({ err }, 'Invalid JWT');
+    logger.warn({ err }, 'Invalid Token');
     return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: 'Invalid or expired token' });
   }
 });
@@ -113,6 +142,11 @@ app.get('/health', (_req, res) => {
 
 const BACKEND_HOST = process.env.BACKEND_HOST || '127.0.0.1';
 
+const getHost = (service: string) => {
+  const envVar = `${service.toUpperCase().replace(/-/g, '_')}_HOST`;
+  return process.env[envVar] || BACKEND_HOST;
+};
+
 interface RouteConfig {
   prefix: string;
   target: string;
@@ -121,44 +155,44 @@ interface RouteConfig {
 
 const routes: RouteConfig[] = [
   // Auth & Identity
-  { prefix: '/api/v1/auth',      target: `http://${BACKEND_HOST}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
-  { prefix: '/api/v1/admin/users', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
-  { prefix: '/api/v1/admin/roles', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
-  { prefix: '/api/v1/admin/stores', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
+  { prefix: '/api/v1/auth',      target: `http://${getHost('identity-service')}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
+  { prefix: '/api/v1/admin/users', target: `http://${getHost('identity-service')}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
+  { prefix: '/api/v1/admin/roles', target: `http://${getHost('identity-service')}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
+  { prefix: '/api/v1/admin/stores', target: `http://${getHost('identity-service')}:${SERVICE_PORTS.IDENTITY_SERVICE}`, service: 'identity-service' },
 
   // Sessions
-  { prefix: '/api/v1/sessions',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.SESSION_SERVICE}`, service: 'session-service' },
+  { prefix: '/api/v1/sessions',  target: `http://${getHost('session-service')}:${SERVICE_PORTS.SESSION_SERVICE}`, service: 'session-service' },
 
   // Catalog & Products
-  { prefix: '/api/v1/products',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.CATALOG_SERVICE}`, service: 'catalog-service' },
-  { prefix: '/api/v1/categories', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.CATALOG_SERVICE}`, service: 'catalog-service' },
+  { prefix: '/api/v1/products',  target: `http://${getHost('catalog-service')}:${SERVICE_PORTS.CATALOG_SERVICE}`, service: 'catalog-service' },
+  { prefix: '/api/v1/categories', target: `http://${getHost('catalog-service')}:${SERVICE_PORTS.CATALOG_SERVICE}`, service: 'catalog-service' },
 
   // Cart / Billing (scoped under sessions)
   // These routes need special handling — they match /api/v1/sessions/{id}/items, /bill, /promo
   // The session-scoped cart routes are proxied to the cart service
 
   // Inventory
-  { prefix: '/api/v1/inventory', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.INVENTORY_SERVICE}`, service: 'inventory-service' },
+  { prefix: '/api/v1/inventory', target: `http://${getHost('inventory-service')}:${SERVICE_PORTS.INVENTORY_SERVICE}`, service: 'inventory-service' },
 
   // Verification
-  { prefix: '/api/v1/verify',   target: `http://${BACKEND_HOST}:${SERVICE_PORTS.VERIFICATION_SERVICE}`, service: 'verification-service' },
-  { prefix: '/api/v1/admin/verification', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.VERIFICATION_SERVICE}`, service: 'verification-service' },
+  { prefix: '/api/v1/verify',   target: `http://${getHost('verification-service')}:${SERVICE_PORTS.VERIFICATION_SERVICE}`, service: 'verification-service' },
+  { prefix: '/api/v1/admin/verification', target: `http://${getHost('verification-service')}:${SERVICE_PORTS.VERIFICATION_SERVICE}`, service: 'verification-service' },
 
   // Payments
-  { prefix: '/api/v1/payment',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.PAYMENT_SERVICE}`, service: 'payment-service' },
+  { prefix: '/api/v1/payment',  target: `http://${getHost('payment-service')}:${SERVICE_PORTS.PAYMENT_SERVICE}`, service: 'payment-service' },
 
   // Promotions & Loyalty
-  { prefix: '/api/v1/promo',    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.PROMO_SERVICE}`, service: 'promo-service' },
-  { prefix: '/api/v1/loyalty',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.PROMO_SERVICE}`, service: 'promo-service' },
+  { prefix: '/api/v1/promo',    target: `http://${getHost('promo-service')}:${SERVICE_PORTS.PROMO_SERVICE}`, service: 'promo-service' },
+  { prefix: '/api/v1/loyalty',  target: `http://${getHost('promo-service')}:${SERVICE_PORTS.PROMO_SERVICE}`, service: 'promo-service' },
 
   // Notifications
-  { prefix: '/api/v1/notifications', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.NOTIFICATION_SERVICE}`, service: 'notification-service' },
+  { prefix: '/api/v1/notifications', target: `http://${getHost('notification-service')}:${SERVICE_PORTS.NOTIFICATION_SERVICE}`, service: 'notification-service' },
 
   // Audit
-  { prefix: '/api/v1/audit',    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.AUDIT_SERVICE}`, service: 'audit-service' },
+  { prefix: '/api/v1/audit',    target: `http://${getHost('audit-service')}:${SERVICE_PORTS.AUDIT_SERVICE}`, service: 'audit-service' },
 
   // Analytics
-  { prefix: '/api/v1/admin/analytics', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.ANALYTICS_SERVICE}`, service: 'analytics-service' },
+  { prefix: '/api/v1/admin/analytics', target: `http://${getHost('analytics-service')}:${SERVICE_PORTS.ANALYTICS_SERVICE}`, service: 'analytics-service' },
 ];
 
 // ── Cart-scoped session routes (special routing) ───
@@ -166,7 +200,7 @@ const routes: RouteConfig[] = [
 app.use(
   /^\/api\/v1\/sessions\/[^\/]+\/(items|bill|promo)(\/.*)?$/,
   createProxyMiddleware({
-    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.CART_SERVICE}`,
+    target: `http://${getHost('cart-service')}:${SERVICE_PORTS.CART_SERVICE}`,
     changeOrigin: true,
     pathRewrite: (_path, req: any) => req.originalUrl,
   })
@@ -175,7 +209,7 @@ app.use(
 app.use(
   /^\/api\/v1\/sessions\/[^\/]+\/(payment|receipt)(\/.*)?$/,
   createProxyMiddleware({
-    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.PAYMENT_SERVICE}`,
+    target: `http://${getHost('payment-service')}:${SERVICE_PORTS.PAYMENT_SERVICE}`,
     changeOrigin: true,
     pathRewrite: (_path, req: any) => req.originalUrl,
   })
@@ -184,7 +218,7 @@ app.use(
 app.use(
   /^\/api\/v1\/sessions\/[^\/]+\/verify(\/.*)?$/,
   createProxyMiddleware({
-    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.VERIFICATION_SERVICE}`,
+    target: `http://${getHost('verification-service')}:${SERVICE_PORTS.VERIFICATION_SERVICE}`,
     changeOrigin: true,
     pathRewrite: (_path, req: any) => req.originalUrl,
   })
@@ -193,8 +227,10 @@ app.use(
 app.use(
   /^\/api\/v1\/sessions\/[^\/]+\/(notifications|help)(\/.*)?$/,
   createProxyMiddleware({
-    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.NOTIFICATION_SERVICE}`,
+    target: `http://${getHost('notification-service')}:${SERVICE_PORTS.NOTIFICATION_SERVICE}`,
     changeOrigin: true,
+    timeout: 0, // No timeout for SSE streams
+    proxyTimeout: 0,
     pathRewrite: (_path, req: any) => req.originalUrl,
   })
 );
@@ -236,7 +272,7 @@ for (const route of routes) {
 app.use(
   '/api/v1/sessions',
   createProxyMiddleware({
-    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.SESSION_SERVICE}`,
+    target: `http://${getHost('session-service')}:${SERVICE_PORTS.SESSION_SERVICE}`,
     changeOrigin: true,
     pathRewrite: (_path, req: any) => req.originalUrl,
   })
@@ -245,17 +281,17 @@ app.use(
 // ── Per-service health proxy ───────────────────────
 
 const serviceHealthRoutes = [
-  { path: '/api/v1/identity-service/health', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.IDENTITY_SERVICE}` },
-  { path: '/api/v1/session-service/health',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.SESSION_SERVICE}` },
-  { path: '/api/v1/catalog-service/health',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.CATALOG_SERVICE}` },
-  { path: '/api/v1/cart-service/health',     target: `http://${BACKEND_HOST}:${SERVICE_PORTS.CART_SERVICE}` },
-  { path: '/api/v1/inventory-service/health', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.INVENTORY_SERVICE}` },
-  { path: '/api/v1/verification-service/health', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.VERIFICATION_SERVICE}` },
-  { path: '/api/v1/payment-service/health',  target: `http://${BACKEND_HOST}:${SERVICE_PORTS.PAYMENT_SERVICE}` },
-  { path: '/api/v1/promo-service/health',    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.PROMO_SERVICE}` },
-  { path: '/api/v1/notification-service/health', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.NOTIFICATION_SERVICE}` },
-  { path: '/api/v1/audit-service/health',    target: `http://${BACKEND_HOST}:${SERVICE_PORTS.AUDIT_SERVICE}` },
-  { path: '/api/v1/analytics-service/health', target: `http://${BACKEND_HOST}:${SERVICE_PORTS.ANALYTICS_SERVICE}` },
+  { path: '/api/v1/identity-service/health', target: `http://${getHost('identity-service')}:${SERVICE_PORTS.IDENTITY_SERVICE}` },
+  { path: '/api/v1/session-service/health',  target: `http://${getHost('session-service')}:${SERVICE_PORTS.SESSION_SERVICE}` },
+  { path: '/api/v1/catalog-service/health',  target: `http://${getHost('catalog-service')}:${SERVICE_PORTS.CATALOG_SERVICE}` },
+  { path: '/api/v1/cart-service/health',     target: `http://${getHost('cart-service')}:${SERVICE_PORTS.CART_SERVICE}` },
+  { path: '/api/v1/inventory-service/health', target: `http://${getHost('inventory-service')}:${SERVICE_PORTS.INVENTORY_SERVICE}` },
+  { path: '/api/v1/verification-service/health', target: `http://${getHost('verification-service')}:${SERVICE_PORTS.VERIFICATION_SERVICE}` },
+  { path: '/api/v1/payment-service/health',  target: `http://${getHost('payment-service')}:${SERVICE_PORTS.PAYMENT_SERVICE}` },
+  { path: '/api/v1/promo-service/health',    target: `http://${getHost('promo-service')}:${SERVICE_PORTS.PROMO_SERVICE}` },
+  { path: '/api/v1/notification-service/health', target: `http://${getHost('notification-service')}:${SERVICE_PORTS.NOTIFICATION_SERVICE}` },
+  { path: '/api/v1/audit-service/health',    target: `http://${getHost('audit-service')}:${SERVICE_PORTS.AUDIT_SERVICE}` },
+  { path: '/api/v1/analytics-service/health', target: `http://${getHost('analytics-service')}:${SERVICE_PORTS.ANALYTICS_SERVICE}` },
 ];
 
 for (const route of serviceHealthRoutes) {

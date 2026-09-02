@@ -42,10 +42,10 @@ export const migrations: MigrationFile[] = [
       );
 
       -- Indexes
-      CREATE INDEX idx_users_email ON users(email);
-      CREATE INDEX idx_users_store_id ON users(store_id);
-      CREATE INDEX idx_customers_loyalty_id ON customers(loyalty_id);
-      CREATE INDEX idx_customers_phone ON customers(phone);
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_store_id ON users(store_id);
+      CREATE INDEX IF NOT EXISTS idx_customers_loyalty_id ON customers(loyalty_id);
+      CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
     `,
   },
 ];

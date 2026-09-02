@@ -8,7 +8,7 @@ import { CategoryModule } from './modules/category/category.module';
 @Module({
   imports: [
     PrometheusModule.register(),
-    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost:27017/scango_catalog'),
+    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://scango:scango_dev_pass@localhost:27017/scango_catalog?authSource=admin'),
     ProductModule,
     CategoryModule,
   ],

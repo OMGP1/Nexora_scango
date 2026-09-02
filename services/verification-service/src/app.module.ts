@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { VerificationModule } from './modules/verification/verification.module';
 import { GateModule } from './modules/gate/gate.module';
-import { VerificationSession } from './modules/verification/verification-session.entity';
+
 import { HealthController } from './health.controller';
 
 @Module({
@@ -13,7 +13,7 @@ import { HealthController } from './health.controller';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/scango_verification',
-      entities: [VerificationSession],
+      entities: [],
       synchronize: true, // DEV ONLY
     }),
     ThrottlerModule.forRoot([{

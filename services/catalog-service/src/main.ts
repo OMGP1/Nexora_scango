@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import { createLogger } from '@scango/common';
 
 const logger = createLogger('catalog-service');
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 3003;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

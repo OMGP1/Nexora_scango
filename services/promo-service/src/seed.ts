@@ -3,9 +3,9 @@ import { Pool } from 'pg';
 async function seed() {
   const pool = new Pool({
     host: process.env.POSTGRES_HOST || 'localhost',
-    port: parseInt(process.env.POSTGRES_PORT || '5432'),
-    user: process.env.POSTGRES_USER || 'postgres',
-    password: process.env.POSTGRES_PASSWORD || 'postgres',
+    port: parseInt(process.env.POSTGRES_PORT || '5433'),
+    user: process.env.POSTGRES_USER || 'scango',
+    password: process.env.POSTGRES_PASSWORD || 'scango_dev_pass',
     database: 'scango_promo',
   });
 

@@ -12,7 +12,7 @@
     "test:e2e": "jest --config jest-e2e.config.js",
     "clean": "rimraf dist",
     "db:migrate": "echo \"No DB migrations\"",
-    "seed": "echo \"No seed data\""
+    "seed": "ts-node src/seed.ts"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^9.5.1",

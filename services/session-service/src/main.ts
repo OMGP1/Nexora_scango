@@ -5,7 +5,7 @@ import { createLogger } from '@scango/common';
 import helmet from 'helmet';
 
 const logger = createLogger('session-service');
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3002;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

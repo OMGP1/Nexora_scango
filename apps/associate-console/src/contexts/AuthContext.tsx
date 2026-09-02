@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { signInAnonymously, onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { auth } from '../services/firebase';
-
 
 interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
-  loginGuest: (storeId: string) => Promise<void>;
+  loading: boolean;
+  login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
   user: User | null;
 }
@@ -16,49 +16,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const accessToken = await currentUser.getIdToken();
+        const accessToken = await currentUser.getIdToken(true);
         setToken(accessToken);
         localStorage.setItem('token', accessToken);
-        // Inject token into axios interceptors if needed, or handle in api setup
       } else {
         setToken(null);
         localStorage.removeItem('token');
       }
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  const loginGuest = async (storeId: string) => {
-    try {
-      // Firebase anonymous login
-      const credential = await signInAnonymously(auth);
-      const accessToken = await credential.user.getIdToken();
-      setToken(accessToken);
-      localStorage.setItem('token', accessToken);
-      
-      // Store store_id locally since we still need it for the session
-      localStorage.setItem('store_id', storeId);
-    } catch (error) {
-      console.error('Login failed', error);
-      throw error;
-    }
+  const login = async (email: string, pass: string) => {
+    const credential = await signInWithEmailAndPassword(auth, email, pass);
+    const accessToken = await credential.user.getIdToken(true);
+    setToken(accessToken);
+    localStorage.setItem('token', accessToken);
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      console.error(e);
-    }
+    await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, loginGuest, logout, user }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, loading, login, logout, user }}>
       {children}
     </AuthContext.Provider>
   );

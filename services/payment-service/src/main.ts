@@ -5,7 +5,7 @@ import { createLogger } from '@scango/common';
 import helmet from 'helmet';
 
 const logger = createLogger('payment-service');
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3007;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

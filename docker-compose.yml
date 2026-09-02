@@ -73,7 +73,7 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
@@ -212,6 +212,285 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./infra/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml
     command: -config.file=/etc/promtail/promtail-config.yaml
+
+  api-gateway:
+    image: node:20-alpine
+    container_name: scango-api-gateway
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/api-gateway/dist/index.js
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
+      - SESSION_SERVICE_HOST=session-service
+      - CART_SERVICE_HOST=cart-service
+      - CATALOG_SERVICE_HOST=catalog-service
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PROMO_SERVICE_HOST=promo-service
+      - NOTIFICATION_SERVICE_HOST=notification-service
+      - INVENTORY_SERVICE_HOST=inventory-service
+      - VERIFICATION_SERVICE_HOST=verification-service
+      - IDENTITY_SERVICE_HOST=identity-service
+      - AUDIT_SERVICE_HOST=audit-service
+      - ANALYTICS_SERVICE_HOST=analytics-service
+
+  session-service:
+    image: node:20-alpine
+    container_name: scango-session-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/session-service/dist/main.js
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  cart-service:
+    image: node:20-alpine
+    container_name: scango-cart-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/cart-service/dist/main.js
+    ports:
+      - "3004:3004"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  catalog-service:
+    image: node:20-alpine
+    container_name: scango-catalog-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/catalog-service/dist/main.js
+    ports:
+      - "3003:3003"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+      - MONGO_URI=mongodb://scango:scango_dev_pass@mongo:27017/scango_catalog?authSource=admin
+
+  payment-service:
+    image: node:20-alpine
+    container_name: scango-payment-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/payment-service/dist/main.js
+    ports:
+      - "3007:3007"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_main
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  promo-service:
+    image: node:20-alpine
+    container_name: scango-promo-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/promo-service/dist/main.js
+    ports:
+      - "3005:3005"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  notification-service:
+    image: node:20-alpine
+    container_name: scango-notification-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/notification-service/dist/main.js
+    ports:
+      - "3009:3009"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  inventory-service:
+    image: node:20-alpine
+    container_name: scango-inventory-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/inventory-service/dist/main.js
+    ports:
+      - "3010:3010"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  verification-service:
+    image: node:20-alpine
+    container_name: scango-verification-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/verification-service/dist/main.js
+    ports:
+      - "3012:3012"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_main
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  identity-service:
+    image: node:20-alpine
+    container_name: scango-identity-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/identity-service/dist/main.js
+    ports:
+      - "3013:3013"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  audit-service:
+    image: node:20-alpine
+    container_name: scango-audit-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/audit-service/dist/main.js
+    ports:
+      - "3014:3014"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
+
+  analytics-service:
+    image: node:20-alpine
+    container_name: scango-analytics-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/analytics-service/dist/main.js
+    ports:
+      - "3015:3015"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - KAFKA_BROKER=kafka:9092
+      - OPENSEARCH_URL=http://opensearch:9200
+      - MINIO_ENDPOINT=minio
+      - BACKEND_HOST=api-gateway
 
 volumes:
   postgres_data:

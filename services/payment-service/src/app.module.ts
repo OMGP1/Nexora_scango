@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PaymentModule } from './modules/payment/payment.module';
-import { PaymentIntent } from './modules/payment/payment-intent.entity';
+
 import { HealthController } from './health.controller';
 
 @Module({
@@ -12,7 +12,7 @@ import { HealthController } from './health.controller';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/scango_payment',
-      entities: [PaymentIntent],
+      entities: [],
       synchronize: true, // DEV ONLY
     }),
     ThrottlerModule.forRoot([{

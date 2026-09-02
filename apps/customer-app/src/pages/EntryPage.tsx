@@ -23,11 +23,19 @@ export const EntryPage: React.FC = () => {
     setLoading(true);
     try {
       await loginGuest(storeId);
-      await createSession(storeId);
+      const existingSessionId = localStorage.getItem('session_id');
+      if (!existingSessionId) {
+        await createSession(storeId);
+      }
       navigate('/scan');
-    } catch (e) {
-      console.error('Failed to start session', e);
-      alert('Could not start session. Please try again.');
+    } catch (e: any) {
+      if (e.response?.status === 409) {
+        // Session already exists for this device, just proceed
+        navigate('/scan');
+      } else {
+        console.error('Failed to start session', e);
+        alert('Could not start session. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

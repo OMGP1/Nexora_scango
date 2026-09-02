@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Settings, ShoppingCart, Tag } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Settings, ShoppingCart, Tag, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Layout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
@@ -11,6 +14,11 @@ export const Layout: React.FC = () => {
     { path: '/catalog', label: 'Catalog', icon: <ShoppingCart size={20} /> },
     { path: '/promotions', label: 'Promotions', icon: <Tag size={20} /> },
   ];
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f9fafb', fontFamily: 'system-ui, sans-serif' }}>
@@ -43,6 +51,28 @@ export const Layout: React.FC = () => {
             );
           })}
         </nav>
+        <div style={{ padding: '16px 24px', borderTop: '1px solid #374151' }}>
+          <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 8px 0', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {user?.email}
+          </p>
+          <button
+            onClick={handleLogout}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'none',
+              border: 'none',
+              color: '#9ca3af',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              padding: 0,
+            }}
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
