@@ -1,52 +1,46 @@
 import React, { useEffect, useRef } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 interface ScannerProps {
   onScan: (barcode: string) => void;
 }
 
 export const Scanner: React.FC<ScannerProps> = ({ onScan }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const debounceRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
-    let controls: any;
-    const codeReader = new BrowserMultiFormatReader();
+    const scanner = new Html5QrcodeScanner(
+      "reader",
+      { 
+        fps: 10, 
+        qrbox: { width: 250, height: 150 },
+        formatsToSupport: [ Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.CODE_128 ],
+        aspectRatio: 1.0,
+        showTorchButtonIfSupported: true,
+      },
+      false
+    );
 
-    if (videoRef.current) {
-      codeReader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-        if (result) {
-          const text = result.getText();
-          const now = Date.now();
-          const lastScan = debounceRef.current[text] || 0;
-          if (now - lastScan > 3000) {
-            debounceRef.current[text] = now;
-            onScan(text);
-          }
-        }
-      }).then(c => controls = c).catch(console.error);
-    }
+    scanner.render((text) => {
+      const now = Date.now();
+      const lastScan = debounceRef.current[text] || 0;
+      // 3 second debounce to prevent rapid-fire scanning of the same item
+      if (now - lastScan > 3000) {
+        debounceRef.current[text] = now;
+        onScan(text);
+      }
+    }, (error) => {
+      // Ignore routine frame read errors
+    });
 
     return () => {
-      if (controls) {
-        controls.stop();
-      }
+      scanner.clear().catch(console.error);
     };
   }, [onScan]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '300px', backgroundColor: '#000', overflow: 'hidden' }}>
-      <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '200px',
-        height: '100px',
-        border: '2px solid rgba(255,255,255,0.5)',
-        boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)'
-      }} />
+    <div style={{ width: '100%', backgroundColor: '#000', display: 'flex', justifyContent: 'center' }}>
+      <div id="reader" style={{ width: '100%', maxWidth: '600px' }}></div>
     </div>
   );
 };

@@ -7,7 +7,7 @@ export const migrations: MigrationFile[] = [
       CREATE TABLE IF NOT EXISTS sessions (
         session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         store_id VARCHAR(50) NOT NULL,
-        customer_id UUID,
+        customer_id VARCHAR(255),
         customer_type VARCHAR(50) NOT NULL, -- 'guest', 'loyalty'
         status VARCHAR(50) NOT NULL, -- 'active', 'paused', 'expired', 'abandoned', 'completed'
         started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

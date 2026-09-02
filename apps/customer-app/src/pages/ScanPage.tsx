@@ -31,6 +31,17 @@ export const ScanPage: React.FC = () => {
           <p style={{ color: '#4b5563', textAlign: 'center' }}>
             Point your camera at a barcode to add it to your cart.
           </p>
+          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+            <input 
+              id="manual-barcode"
+              placeholder="Or enter manually..." 
+              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} 
+            />
+            <Button onClick={() => {
+              const val = (document.getElementById('manual-barcode') as HTMLInputElement).value;
+              if (val) handleScan(val);
+            }}>Add</Button>
+          </div>
         </div>
       </main>
 
