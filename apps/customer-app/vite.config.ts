@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true
+        enabled: false
       },
       manifest: {
         name: 'ScanGo Customer App',
@@ -51,3 +51,6 @@ export default defineConfig({
     sourcemap: true,
   },
 });
+
+
+

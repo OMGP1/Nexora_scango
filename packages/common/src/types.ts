@@ -17,6 +17,7 @@ export interface Store {
 
 export interface StoreConfigFlags {
   self_scan_enabled: boolean;
+  scale_chokepoint_enabled: boolean;   // Phase 1: per-store weight verification gate
   verification_thresholds: {
     green_max: number;   // risk_score < this → Tier 1 Green
     amber_max: number;   // risk_score < this → Tier 2 Amber; >= this → Tier 3 Red
@@ -99,6 +100,24 @@ export interface Product {
   category_id: string;
   image_url: string;
   uom: string;           // "unit", "kg", "g", "l", "ml"
+  // v2 — weight verification fields
+  weight_in_grams: number | null;
+  weight_tolerance_pct: number | null;  // overrides category policy when present
+  dimensions: ProductDimensions | null;
+  ad_tags: ProductAdTags | null;
+}
+
+export interface ProductDimensions {
+  length_mm: number;
+  width_mm: number;
+  height_mm: number;
+}
+
+export interface ProductAdTags {
+  rmn_eligible: boolean;
+  category_path: string[];
+  brand_id: string;
+  sponsored_slots: string[];
 }
 
 export type TaxClass = 'GST_0' | 'GST_5' | 'GST_12' | 'GST_18' | 'GST_28';
@@ -140,6 +159,7 @@ export interface BillSummary {
   tax_total: number;
   grand_total: number;
   item_count: number;
+  expected_total_weight_g: number | null;  // v2: sum of item weights for scale verification
   applied_promo: AppliedPromo | null;
 }
 
@@ -329,4 +349,121 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+// ── v2: Weight Verification & Trust ───────────────
+
+export type TrustTierLevel = 'BRONZE' | 'SILVER' | 'GOLD';
+
+export interface UserTrustTier {
+  user_id: string;
+  tier: TrustTierLevel;
+  clean_exit_count: number;
+  audit_fail_count: number;
+  audit_rate_pct: number;
+  updated_at: Date;
+}
+
+export interface WeightTolerancePolicy {
+  id: string;
+  scope: 'GLOBAL' | 'CATEGORY';
+  category_id: string | null;
+  tolerance_pct: number;
+  tolerance_flat_g: number;
+}
+
+export type ScaleDeviceStatus = 'ONLINE' | 'OFFLINE' | 'DEGRADED';
+
+export interface ExitScaleDevice {
+  id: string;
+  store_id: string;
+  lane_code: string;
+  edge_gateway_id: string;
+  last_calibrated_at: Date | null;
+  calibration_drift_g: number;
+  status: ScaleDeviceStatus;
+}
+
+export interface ScaleReading {
+  store_id: string;
+  lane_code: string;
+  session_id: string;
+  gross_weight_g: number;
+  reading_ts: string;
+  stable: boolean;
+}
+
+// ── v2: Risk Engine ───────────────────────────────
+
+export interface SessionRiskAggregate {
+  session_id: string;
+  cadence_anomaly_score: number;
+  motion_gap_score: number;
+  deletion_score: number;
+  dwell_basket_ratio: number;
+  final_risk_score: number;
+  final_tier: 1 | 2 | 3;
+  scale_delta_g: number | null;
+  updated_at: Date;
+}
+
+export interface RiskTierResponse {
+  session_id: string;
+  tier: 1 | 2 | 3;
+  risk_score: number;
+  signal_flags: string[];
+}
+
+// ── v2: Loyalty Escrow ────────────────────────────
+
+export type EscrowStatus = 'PENDING' | 'RELEASED' | 'FORFEITED';
+
+export interface LoyaltyEscrow {
+  id: string;
+  session_id: string;
+  user_id: string;
+  points_pending: number;
+  points_multiplier: number;
+  status: EscrowStatus;
+  created_at: Date;
+  resolved_at: Date | null;
+}
+
+// ── v2: ERP Sync ──────────────────────────────────
+
+export type ErpType = 'TALLY' | 'MARG' | 'ESCPOS';
+export type SyncDirection = 'PUSH' | 'PULL';
+export type SyncStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
+
+export interface ErpSyncLog {
+  id: string;
+  store_id: string;
+  erp_type: ErpType;
+  direction: SyncDirection;
+  reference_id: string | null;
+  payload_hash: string | null;
+  status: SyncStatus;
+  error_detail: string | null;
+  created_at: Date;
+}
+
+// ── v2: Telemetry ─────────────────────────────────
+
+export interface TelemetryScanEvent {
+  session_id: string;
+  item_barcode: string;
+  client_ts: string;
+  server_ts: string;
+  scan_interval_ms: number;
+  device_id: string;
+}
+
+export interface TelemetryMotionEvent {
+  session_id: string;
+  window_start_ts: string;
+  window_end_ts: string;
+  motion_event_count: number;
+  peak_acceleration: number;
+  orientation_change_deg: number;
+  had_recent_scan: boolean;
 }

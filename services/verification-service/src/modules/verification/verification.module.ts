@@ -3,12 +3,14 @@ import { Pool } from 'pg';
 import { HttpModule } from '@nestjs/axios';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
+import { WeightCheckService } from './weight-check.service';
 
 @Module({
   imports: [HttpModule],
   controllers: [VerificationController],
   providers: [
     VerificationService,
+    WeightCheckService,
     {
       provide: 'DB_POOL',
       useFactory: () => {

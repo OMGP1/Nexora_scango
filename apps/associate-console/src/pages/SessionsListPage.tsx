@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Badge } from '@scango/ui';
 import { adminApi } from '../services/api/admin';
+import { RiskTierBadge } from '../components/RiskTierBadge';
 
 export const SessionsListPage: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -24,6 +25,7 @@ export const SessionsListPage: React.FC = () => {
                 <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Session ID</th>
                 <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Status</th>
                 <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Verification</th>
+                <th style={{ textAlign: 'center', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Risk Tier</th>
                 <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Items</th>
                 <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Value</th>
               </tr>
@@ -37,6 +39,9 @@ export const SessionsListPage: React.FC = () => {
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <Badge variant={s.verification_status === 'HELD' ? 'danger' : 'default'}>{s.verification_status || 'N/A'}</Badge>
+                  </td>
+                  <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                    <RiskTierBadge tier={s.risk_tier || 1} score={s.risk_score} />
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--color-text)' }}>{s.item_count || 0}</td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)' }}>\u20B9{s.total_value || 0}</td>

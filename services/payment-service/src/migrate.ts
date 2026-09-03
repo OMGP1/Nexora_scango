@@ -11,7 +11,7 @@ const migrations = [...m001, ...m002];
 async function migrate() {
   const pool = createPool({
     host: 'localhost', 
-    port: 5433,
+    port: 5434,
     user: 'scango',
     password: 'scango_dev_pass',
     database: 'scango_payment',
@@ -31,3 +31,5 @@ async function migrate() {
 }
 
 migrate();
+
+

@@ -150,13 +150,14 @@ export class CartService {
       cartItem.quantity += quantity;
       cartItem.line_total = Number((cartItem.unit_price * cartItem.quantity).toFixed(2));
       cartItem.tax_amount = Number((cartItem.line_total * cartItem.tax_rate).toFixed(2));
+      cartItem.expected_weight_g = product.weight_in_grams || null;
       
       state.items[existingItemIndex] = cartItem;
       const updatedBill = await this.saveCartState(sessionId, state.items, state.appliedPromo);
 
       await this.pool.query(
-        `UPDATE cart_items SET quantity = $1, line_total = $2, tax_amount = $3 WHERE cart_item_id = $4`,
-        [cartItem.quantity, cartItem.line_total, cartItem.tax_amount, cartItem.cart_item_id]
+        `UPDATE cart_items SET quantity = $1, line_total = $2, tax_amount = $3, expected_weight_g = $4 WHERE cart_item_id = $5`,
+        [cartItem.quantity, cartItem.line_total, cartItem.tax_amount, cartItem.expected_weight_g, cartItem.cart_item_id]
       );
       
       await this.publishEvent('item.updated', {
@@ -187,6 +188,7 @@ export class CartService {
         unit_price: product.unit_price,
         quantity: effectiveQty,
         weight: effectiveWeight,
+        expected_weight_g: product.weight_in_grams || null,
         line_total: Number(lineTotal.toFixed(2)),
         tax_rate: taxRate,
         tax_amount: Number(taxAmount.toFixed(2)),
@@ -197,9 +199,9 @@ export class CartService {
       const updatedBill = await this.saveCartState(sessionId, state.items, state.appliedPromo);
 
       await this.pool.query(
-        `INSERT INTO cart_items (cart_item_id, session_id, sku, quantity, weight, unit_price, line_total, tax_rate, tax_amount, requires_assisted_verification, scan_source)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [cartItem.cart_item_id, sessionId, cartItem.sku, cartItem.quantity, cartItem.weight || null, cartItem.unit_price, cartItem.line_total, cartItem.tax_rate, cartItem.tax_amount, cartItem.requires_assisted_verification, scanSource]
+        `INSERT INTO cart_items (cart_item_id, session_id, sku, quantity, weight, unit_price, line_total, tax_rate, tax_amount, requires_assisted_verification, scan_source, expected_weight_g)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [cartItem.cart_item_id, sessionId, cartItem.sku, cartItem.quantity, cartItem.weight || null, cartItem.unit_price, cartItem.line_total, cartItem.tax_rate, cartItem.tax_amount, cartItem.requires_assisted_verification, scanSource, cartItem.expected_weight_g]
       );
 
       await this.publishEvent('item.scanned', {

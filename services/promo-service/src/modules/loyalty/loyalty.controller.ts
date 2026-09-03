@@ -14,12 +14,16 @@ export class LoyaltyController {
   @Post(':customerId/redeem')
   async redeem(
     @Param('customerId') customerId: string,
-    @Body('points') points: number
+    @Body('coins') coins: number,
+    @Body('cartSubtotal') cartSubtotal: number
   ) {
-    if (!points || points <= 0) {
-      return { success: false, reason: 'Invalid points' };
+    if (!coins || coins <= 0) {
+      return { success: false, reason: 'Invalid coins' };
     }
-    const data = await this.loyaltyService.redeemPoints(customerId, points);
+    if (cartSubtotal === undefined || cartSubtotal < 0) {
+      return { success: false, reason: 'Invalid cartSubtotal' };
+    }
+    const data = await this.loyaltyService.redeemCoins(customerId, coins, cartSubtotal);
     return data;
   }
 }

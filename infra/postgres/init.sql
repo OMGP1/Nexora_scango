@@ -12,6 +12,10 @@ CREATE DATABASE scango_inventory;
 CREATE DATABASE scango_verification;
 CREATE DATABASE scango_promo;
 CREATE DATABASE scango_analytics;
+-- v2 databases
+CREATE DATABASE scango_risk;
+CREATE DATABASE scango_escrow;
+CREATE DATABASE scango_erp;
 
 -- Grant full privileges to the scango user on all databases
 GRANT ALL PRIVILEGES ON DATABASE scango_identity TO scango;
@@ -23,3 +27,7 @@ GRANT ALL PRIVILEGES ON DATABASE scango_inventory TO scango;
 GRANT ALL PRIVILEGES ON DATABASE scango_verification TO scango;
 GRANT ALL PRIVILEGES ON DATABASE scango_promo TO scango;
 GRANT ALL PRIVILEGES ON DATABASE scango_analytics TO scango;
+-- v2 databases
+GRANT ALL PRIVILEGES ON DATABASE scango_risk TO scango;
+GRANT ALL PRIVILEGES ON DATABASE scango_escrow TO scango;
+GRANT ALL PRIVILEGES ON DATABASE scango_erp TO scango;

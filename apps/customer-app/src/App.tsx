@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { ScanPage } from './pages/ScanPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { ExitScalePage } from './pages/ExitScalePage';
 import { ReceiptPage } from './pages/ReceiptPage';
 import { VerificationPage } from './pages/VerificationPage';
 import { PurchaseHistoryPage } from './pages/PurchaseHistoryPage';
@@ -47,6 +48,7 @@ function App() {
               <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
               <Route path="/verification" element={<ProtectedRoute><VerificationPage /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+              <Route path="/exit-scale" element={<ProtectedRoute><ExitScalePage /></ProtectedRoute>} />
               <Route path="/receipt" element={<ProtectedRoute><ReceiptPage /></ProtectedRoute>} />
               <Route path="/receipt/:id" element={<ProtectedRoute><ReceiptPage /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><PurchaseHistoryPage /></ProtectedRoute>} />

@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Check, LogOut, FileText } from 'lucide-react';
 import { Button, PageHeader, BottomBar, Card, Input } from '@scango/ui';
+import { useBehavioralTelemetry } from '../hooks/useBehavioralTelemetry';
+import { HonestyBonusTracker } from '../components/HonestyBonusTracker';
+import { InAisleAdSlot } from '../components/InAisleAdSlot';
 
 export const ScanPage: React.FC = () => {
   const { addItem, billSummary } = useCart();
@@ -12,11 +15,15 @@ export const ScanPage: React.FC = () => {
   const navigate = useNavigate();
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [manualBarcode, setManualBarcode] = useState('');
+  
+  const sessionId = localStorage.getItem('session_id');
+  const { markScanEvent } = useBehavioralTelemetry(sessionId, true);
 
   const handleScan = async (barcode: string) => {
     try {
       if (navigator.vibrate) navigator.vibrate(100);
       await addItem(barcode);
+      markScanEvent(barcode);
       setLastScanned(barcode);
       setTimeout(() => setLastScanned(null), 2000);
     } catch (e: any) {
@@ -53,6 +60,8 @@ export const ScanPage: React.FC = () => {
         }
       />
 
+      <HonestyBonusTracker sessionId={sessionId} />
+
       {/* Scanner */}
       <Scanner onScan={handleScan} />
 
@@ -76,6 +85,9 @@ export const ScanPage: React.FC = () => {
           Item added to cart
         </div>
       )}
+
+      {/* Ad Slot */}
+      <InAisleAdSlot sku={lastScanned} />
 
       {/* Manual entry */}
       <div style={{ padding: '16px 20px' }}>

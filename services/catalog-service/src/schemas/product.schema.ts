@@ -37,6 +37,29 @@ export class Product {
 
   @Prop()
   uom: string;
+
+  // v2 — Weight verification fields
+  @Prop({ default: null })
+  weight_in_grams: number;
+
+  @Prop({ default: null })
+  weight_tolerance_pct: number;
+
+  @Prop({ type: Object, default: null })
+  dimensions: {
+    length_mm: number;
+    width_mm: number;
+    height_mm: number;
+  };
+
+  // v2 — RMN ad targeting (Phase 3 prep)
+  @Prop({ type: Object, default: null })
+  ad_tags: {
+    rmn_eligible: boolean;
+    category_path: string[];
+    brand_id: string;
+    sponsored_slots: string[];
+  };
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

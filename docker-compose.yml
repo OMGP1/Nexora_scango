@@ -12,7 +12,7 @@ services:
     container_name: scango-postgres
     restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       POSTGRES_USER: scango
       POSTGRES_PASSWORD: scango_dev_pass
@@ -72,10 +72,10 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,DOCKER://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,DOCKER://kafka:29092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,DOCKER:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -120,7 +120,7 @@ services:
     restart: unless-stopped
     ports:
       - "9000:9000"
-      - "9001:9001"
+      - "9003:9001"
     environment:
       MINIO_ROOT_USER: scango_minio
       MINIO_ROOT_PASSWORD: scango_minio_pass
@@ -222,7 +222,7 @@ services:
       - .:/app
     command: node services/api-gateway/dist/index.js
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - .env
     environment:
@@ -495,6 +495,138 @@ services:
       - MINIO_ENDPOINT=minio
       - BACKEND_HOST=api-gateway
 
+  scango-mqtt:
+    image: eclipse-mosquitto:2
+    container_name: scango-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9004:9001"
+    volumes:
+      - ./infra/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  scale-gateway-service:
+    image: node:20-alpine
+    container_name: scango-scale-gateway-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/scale-gateway-service/dist/main.js
+    ports:
+      - "3016:3016"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:9092
+      - MQTT_BROKER_URL=mqtt://scango-mqtt:1883
+      - PORT=3016
+
+  telemetry-ingest-service:
+    image: node:20-alpine
+    container_name: scango-telemetry-ingest-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/telemetry-ingest-service/dist/main.js
+    ports:
+      - "3017:3017"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_risk
+      - KAFKA_BROKER=kafka:9092
+      - PORT=3017
+
+  risk-engine-service:
+    image: node:20-alpine
+    container_name: scango-risk-engine-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/risk-engine-service/dist/main.js
+    ports:
+      - "3018:3018"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_risk
+      - KAFKA_BROKER=kafka:9092
+      - PORT=3018
+
+  loyalty-escrow-service:
+    image: node:20-alpine
+    container_name: scango-loyalty-escrow-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/loyalty-escrow-service/dist/main.js
+    ports:
+      - "3019:3019"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_escrow
+      - KAFKA_BROKER=kafka:9092
+      - PORT=3019
+
+  rmn-service:
+    image: node:20-alpine
+    container_name: scango-rmn-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/rmn-service/dist/main.js
+    ports:
+      - "3020:3020"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_main
+      - KAFKA_BROKER=kafka:9092
+  erp-sync-service:
+    image: node:20-alpine
+    container_name: scango-erp-sync-service
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: node services/erp-sync-service/dist/main.js
+    ports:
+      - "3021:3021"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_erp
+      - KAFKA_BROKER=kafka:9092
+      - PORT=3021
+
 volumes:
   postgres_data:
   redis_data:
@@ -504,3 +636,5 @@ volumes:
   minio_data:
   prometheus_data:
   grafana_data:
+
+

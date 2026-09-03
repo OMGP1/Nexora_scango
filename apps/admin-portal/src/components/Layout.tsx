@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, ShoppingCart, Activity, Tag, LogOut, Package, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Settings, ShoppingCart, Activity, Tag, LogOut, Package, Menu, X, Shield, Megaphone, Server } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './Layout.css';
 
@@ -9,8 +9,10 @@ const navItems = [
   { path: '/config', label: 'Store Config', icon: Settings },
   { path: '/catalog', label: 'Catalog', icon: ShoppingCart },
   { path: '/inventory', label: 'Inventory', icon: Package },
+  { path: '/trust-tiers', label: 'Trust Tiers', icon: Shield },
+  { path: '/rmn-campaigns', label: 'RMN Campaigns', icon: Megaphone },
   { path: '/health', label: 'System Health', icon: Activity },
-  { path: '/promotions', label: 'Promotions', icon: Tag },
+  { path: '/edge-fleet', label: 'Edge Fleet Health', icon: Server },
 ];
 
 export const Layout: React.FC = () => {
@@ -107,3 +109,4 @@ export const Layout: React.FC = () => {
     </div>
   );
 };
+

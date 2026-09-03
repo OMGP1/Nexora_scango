@@ -26,7 +26,7 @@ export class LoyaltyConsumer implements OnModuleInit, OnModuleDestroy {
           if (topic === 'payment.confirmed') {
             const customerId = payload.customer_id || 'guest';
             const amountSpent = payload.amount || 0;
-            await this.loyaltyService.accruePoints(customerId, amountSpent);
+            await this.loyaltyService.accrueCoins(customerId, amountSpent);
           }
         } catch (e) {
           this.logger.error(`Error processing event on topic ${topic}`, e);

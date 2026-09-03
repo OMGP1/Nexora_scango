@@ -11,7 +11,7 @@ import { HealthController } from './health.controller';
     PrometheusModule.register(),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/scango_payment',
+      url: process.env.DATABASE_URL || 'postgres://scango:scango_dev_pass@localhost:5434/scango_payments',
       entities: [],
       synchronize: true, // DEV ONLY
     }),
@@ -25,3 +25,5 @@ import { HealthController } from './health.controller';
   providers: [],
 })
 export class AppModule {}
+
+

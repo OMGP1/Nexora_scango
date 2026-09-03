@@ -1,6 +1,7 @@
 import { createPool, runMigrations } from '@scango/db';
 import { createLogger, loadConfig, postgresConfigSchema } from '@scango/common';
-import { migrations } from './db/migrations/001_initial_promo_schema';
+import { migrations as migration1 } from './db/migrations/001_initial_promo_schema';
+import { migrations as migration2 } from './db/migrations/002_rename_points_to_coins';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '../../.env' });
@@ -19,7 +20,7 @@ async function migrate() {
 
   try {
     logger.info('Starting promo database migrations...');
-    await runMigrations(pool, migrations);
+    await runMigrations(pool, [...migration1, ...migration2]);
     logger.info('Migrations completed successfully.');
   } catch (err) {
     logger.error({ err }, 'Migration failed');

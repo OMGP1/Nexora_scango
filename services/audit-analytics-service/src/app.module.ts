@@ -11,7 +11,7 @@ import { AnalyticsKpi } from './modules/analytics/analytics-kpi.entity';
     PrometheusModule.register(),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/scango_audit',
+      url: process.env.DATABASE_URL || 'postgres://scango:scango_dev_pass@localhost:5434/scango_audit',
       entities: [AuditEvent, AnalyticsKpi],
       synchronize: true, // For dev only
     }),
@@ -20,3 +20,4 @@ import { AnalyticsKpi } from './modules/analytics/analytics-kpi.entity';
   ],
 })
 export class AppModule {}
+

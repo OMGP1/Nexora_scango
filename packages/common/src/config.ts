@@ -83,7 +83,21 @@ export const SERVICE_PORTS = {
   NOTIFICATION_SERVICE: 3009,
   AUDIT_SERVICE: 3010,
   ANALYTICS_SERVICE: 3011,
+  // v2 services
+  SCALE_GATEWAY_SERVICE: 3016,
+  TELEMETRY_INGEST_SERVICE: 3017,
+  RISK_ENGINE_SERVICE: 3018,
+  LOYALTY_ESCROW_SERVICE: 3019,
+  RMN_SERVICE: 3020,
+  ERP_SYNC_SERVICE: 3021,
 } as const;
+
+// ── MQTT Config (v2) ──────────────────────────────
+
+export const mqttConfigSchema = z.object({
+  MQTT_BROKER_URL: z.string().default('mqtt://localhost:1883'),
+  MQTT_CLIENT_ID: z.string().optional(),
+});
 
 // ── Config Loader ──────────────────────────────────
 
@@ -96,3 +110,4 @@ export function loadConfig<T extends z.ZodTypeAny>(schema: T): z.infer<T> {
   }
   return result.data;
 }
+
