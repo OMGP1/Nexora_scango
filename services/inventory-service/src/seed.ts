@@ -14,7 +14,7 @@ async function seed() {
   const productsPath = path.join(__dirname, '../../catalog-service/src/fixtures/products.json');
   const products = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
 
-  const storeId = 'STORE001';
+  const storeId = 'STORE_001';
 
   for (const product of products) {
     await pool.query(

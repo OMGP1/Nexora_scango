@@ -7,7 +7,7 @@ import { ErpAdapter } from './erp.adapter';
 export class InventoryConsumer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(InventoryConsumer.name);
   private consumer: any;
-  private readonly storeId = 'STORE001'; // Default for pilot
+  private readonly storeId = 'STORE_001'; // Default for pilot
 
   constructor(
     private readonly inventoryService: InventoryService,

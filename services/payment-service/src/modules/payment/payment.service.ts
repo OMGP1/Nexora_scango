@@ -216,7 +216,7 @@ export class PaymentService {
       const exitPassToken = await this.exitPassService.generateExitPass(
         payment.session_id,
         payment.payment_id,
-        'STORE001'
+        'STORE_001'
       );
 
       // Save receipt
@@ -227,7 +227,7 @@ export class PaymentService {
           receiptNo,
           payment.session_id,
           customerId || payment.customer_id || 'guest',
-          'STORE001',
+          'STORE_001',
           JSON.stringify(bill.items),
           JSON.stringify(bill.bill_summary),
           payment.method || 'card',
@@ -310,7 +310,7 @@ export class PaymentService {
 
     return {
       receipt_no: receiptNo,
-      store_info: { store_id: 'STORE001', name: 'ScanGo Supermarket', address: '123 Main St, Bangalore, India' },
+      store_info: { store_id: 'STORE_001', name: 'ScanGo Supermarket', address: '123 Main St, Bangalore, India' },
       timestamp: payment.paid_at,
       payment_details: { payment_id: payment.payment_id, method: payment.method, gateway_ref: payment.gateway_ref },
       bill_summary: bill.bill_summary,
@@ -397,7 +397,7 @@ export class PaymentService {
           if (!sku) continue;
           
           try {
-            await firstValueFrom(this.httpService.post(`${inventoryUrl}/${payload.store_id || 'STORE001'}/adjust`, {
+            await firstValueFrom(this.httpService.post(`${inventoryUrl}/${payload.store_id || 'STORE_001'}/adjust`, {
               sku: sku,
               quantity: -Math.abs(item.quantity || 1),
               reason: 'SALE',
