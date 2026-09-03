@@ -2,6 +2,7 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { Pool } from 'pg';
 import { HttpService } from '@nestjs/axios';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -12,7 +13,7 @@ export class VerificationService {
     @Inject('DB_POOL') private pool: Pool,
     private httpService: HttpService
   ) {
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'verification-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

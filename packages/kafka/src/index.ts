@@ -16,6 +16,9 @@ export interface KafkaConfig {
 /**
  * Create a Kafka client instance
  */
+import * as fs from 'fs';
+import * as path from 'path';
+
 export function createKafkaClient(config: KafkaConfig): Kafka {
   const saslConfig = process.env.KAFKA_USERNAME && process.env.KAFKA_PASSWORD ? {
     mechanism: 'plain' as const,
@@ -23,11 +26,21 @@ export function createKafkaClient(config: KafkaConfig): Kafka {
     password: process.env.KAFKA_PASSWORD,
   } : undefined;
 
+  let sslConfig: any = !!saslConfig;
+  try {
+    const caPath = path.resolve(process.cwd(), 'ca.pem');
+    if (fs.existsSync(caPath)) {
+      sslConfig = { ca: [fs.readFileSync(caPath, 'utf-8')] };
+    }
+  } catch (e) {
+    // fallback to default ssl
+  }
+
   return new Kafka({
     clientId: config.clientId,
     brokers: config.brokers,
     logLevel: logLevel.WARN,
-    ssl: !!saslConfig,
+    ssl: sslConfig,
     ...(saslConfig && { sasl: saslConfig }),
     retry: {
       initialRetryTime: 300,

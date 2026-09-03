@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import Redis from 'ioredis';
 import { SmsAdapter } from '../../adapters/sms.adapter';
 import { PushAdapter } from '../../adapters/push.adapter';
@@ -16,7 +17,7 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
     private smsAdapter: SmsAdapter,
     private pushAdapter: PushAdapter
   ) {
-    this.kafka = new Kafka({
+    this.kafka = createKafkaClient({
       clientId: 'notification-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

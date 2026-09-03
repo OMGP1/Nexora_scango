@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { InventoryService } from './inventory.service';
 import { ErpAdapter } from './erp.adapter';
 
@@ -13,7 +14,7 @@ export class InventoryConsumer implements OnModuleInit, OnModuleDestroy {
     private readonly inventoryService: InventoryService,
     private readonly erpAdapter: ErpAdapter
   ) {
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'inventory-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

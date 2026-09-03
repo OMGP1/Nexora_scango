@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditEvent } from './audit-event.entity';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -15,7 +16,7 @@ export class AuditService implements OnModuleInit, OnModuleDestroy {
     @InjectRepository(AuditEvent)
     private auditRepo: Repository<AuditEvent>
   ) {
-    this.kafka = new Kafka({
+    this.kafka = createKafkaClient({
       clientId: 'audit-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

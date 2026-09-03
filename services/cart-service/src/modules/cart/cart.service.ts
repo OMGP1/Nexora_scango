@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { v4 as uuidv4 } from 'uuid';
 import { firstValueFrom } from 'rxjs';
 import { getTaxRate } from '../../config/tax-rates';
@@ -19,7 +20,7 @@ export class CartService {
   ) {
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
     
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'cart-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

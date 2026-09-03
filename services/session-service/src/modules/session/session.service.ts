@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException, Inject } from '@nestj
 import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class SessionService {
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
     this.redis.on('error', (err) => console.error('Redis connect error:', err));
     
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'session-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

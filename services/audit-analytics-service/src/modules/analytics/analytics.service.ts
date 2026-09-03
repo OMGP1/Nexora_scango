@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AnalyticsKpi } from './analytics-kpi.entity';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 
 @Injectable()
 export class AnalyticsService implements OnModuleInit, OnModuleDestroy {
@@ -14,7 +15,7 @@ export class AnalyticsService implements OnModuleInit, OnModuleDestroy {
     @InjectRepository(AnalyticsKpi)
     private kpiRepo: Repository<AnalyticsKpi>
   ) {
-    this.kafka = new Kafka({
+    this.kafka = createKafkaClient({
       clientId: 'analytics-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { VerificationService } from '../verification/verification.service';
 
 @Injectable()
@@ -11,7 +12,7 @@ export class GateService {
 
   constructor(private verificationService: VerificationService) {
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'verification-service-gate',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

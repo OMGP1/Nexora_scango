@@ -2,6 +2,7 @@ import { Injectable, Inject, NotFoundException, BadRequestException } from '@nes
 import { Pool } from 'pg';
 import { HttpService } from '@nestjs/axios';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { firstValueFrom } from 'rxjs';
 import { StripeAdapter } from './adapters/stripe.adapter';
 import { ExitPassService } from './exit-pass.service';
@@ -16,7 +17,7 @@ export class PaymentService {
     private gatewayAdapter: StripeAdapter,
     private exitPassService: ExitPassService
   ) {
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'payment-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 import { LoyaltyService } from './loyalty.service';
 
 @Injectable()
@@ -8,7 +9,7 @@ export class LoyaltyConsumer implements OnModuleInit, OnModuleDestroy {
   private consumer: any;
 
   constructor(private readonly loyaltyService: LoyaltyService) {
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'promo-service',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });

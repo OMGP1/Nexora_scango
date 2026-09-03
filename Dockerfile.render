@@ -9,6 +9,7 @@ RUN npm install -g concurrently
 COPY package.json package-lock.json turbo.json ./
 COPY packages/ ./packages/
 COPY services/ ./services/
+COPY ca.pem ./
 
 # Install dependencies and build
 RUN npm install

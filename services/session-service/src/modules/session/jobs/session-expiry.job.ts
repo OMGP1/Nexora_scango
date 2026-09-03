@@ -2,13 +2,14 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Pool } from 'pg';
 import { Kafka } from 'kafkajs';
+import { createKafkaClient } from '@scango/kafka';
 
 @Injectable()
 export class SessionExpiryJob {
   private kafkaProducer: any;
 
   constructor(@Inject('DB_POOL') private pool: Pool) {
-    const kafka = new Kafka({
+    const kafka = createKafkaClient({
       clientId: 'session-expiry-job',
       brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     });
