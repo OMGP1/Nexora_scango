@@ -181,4 +181,85 @@ export class InventoryService {
        client.release();
      }
   }
+
+  async getAllInventory(storeId: string) {
+    const res = await this.pool.query(
+      `SELECT store_id, sku, available_qty, reserved_qty, last_updated FROM inventory_snapshot WHERE store_id = $1 ORDER BY sku`,
+      [storeId]
+    );
+    return res.rows;
+  }
+
+  async receiveStock(storeId: string, sku: string, quantity: number, receivedBy: string) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Upsert inventory_snapshot
+      await client.query(
+        `INSERT INTO inventory_snapshot (store_id, sku, available_qty, reserved_qty, last_updated)
+         VALUES ($1, $2, $3, 0, CURRENT_TIMESTAMP)
+         ON CONFLICT (store_id, sku)
+         DO UPDATE SET available_qty = inventory_snapshot.available_qty + $3, last_updated = CURRENT_TIMESTAMP`,
+        [storeId, sku, quantity]
+      );
+
+      // Write ledger entry
+      await client.query(
+        `INSERT INTO inventory_ledger (store_id, sku, movement_type, quantity_delta, adjusted_by)
+         VALUES ($1, $2, 'ADJUSTMENT', $3, $4)`,
+        [storeId, sku, quantity, receivedBy]
+      );
+
+      await client.query('COMMIT');
+      this.logger.log(`Stock received: ${storeId} ${sku} +${quantity} by ${receivedBy}`);
+
+      return { store_id: storeId, sku, quantity_added: quantity };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async adjustStock(storeId: string, sku: string, quantity: number, reason: string, adjustedBy: string) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE inventory_snapshot
+         SET available_qty = available_qty + $1, last_updated = CURRENT_TIMESTAMP
+         WHERE store_id = $2 AND sku = $3`,
+        [quantity, storeId, sku]
+      );
+
+      await client.query(
+        `INSERT INTO inventory_ledger (store_id, sku, movement_type, quantity_delta, session_id, adjusted_by)
+         VALUES ($1, $2, 'ADJUSTMENT', $3, NULL, $4)`,
+        [storeId, sku, quantity, adjustedBy]
+      );
+
+      await client.query('COMMIT');
+      this.logger.log(`Stock adjusted: ${storeId} ${sku} ${quantity} reason=${reason} by ${adjustedBy}`);
+
+      return { store_id: storeId, sku, quantity_adjusted: quantity, reason };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getLedger(storeId: string) {
+    const res = await this.pool.query(
+      `SELECT ledger_id, store_id, sku, movement_type, quantity_delta, session_id, adjusted_by, recorded_at
+       FROM inventory_ledger WHERE store_id = $1 ORDER BY recorded_at DESC LIMIT 200`,
+      [storeId]
+    );
+    return res.rows;
+  }
 }
+

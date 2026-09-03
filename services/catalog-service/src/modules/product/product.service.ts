@@ -89,4 +89,46 @@ export class ProductService {
 
     return { success: true, imported: products.length };
   }
+
+  async listAll() {
+    const products = await this.productModel.find().lean().exec();
+    return { success: true, data: products };
+  }
+
+  async createProduct(product: any) {
+    const doc = await this.productModel.create(product);
+    // Invalidate cache
+    if (product.barcode) {
+      await this.redis.del(`product:barcode:${product.barcode}`);
+    }
+    return { success: true, data: doc.toObject() };
+  }
+
+  async updateProduct(sku: string, updates: any) {
+    const product = await this.productModel.findOneAndUpdate(
+      { sku },
+      { $set: updates },
+      { new: true, lean: true }
+    ).exec();
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    // Invalidate cache
+    if (product.barcode) {
+      await this.redis.del(`product:barcode:${product.barcode}`);
+    }
+    return { success: true, data: product };
+  }
+
+  async deleteProduct(sku: string) {
+    const product = await this.productModel.findOneAndDelete({ sku }).lean().exec();
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    // Invalidate cache
+    if (product.barcode) {
+      await this.redis.del(`product:barcode:${product.barcode}`);
+    }
+    return { success: true, message: 'Product deleted' };
+  }
 }

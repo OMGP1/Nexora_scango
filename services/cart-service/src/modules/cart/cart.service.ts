@@ -41,10 +41,12 @@ export class CartService {
   private async getProductInfo(barcode: string): Promise<any> {
     try {
       // Assuming catalog-service is reachable at localhost:3002 internally or via gateway
-      const catalogUrl = process.env.CATALOG_SERVICE_URL || 'http://localhost:3002/api/v1/products';
+      const catalogUrl = process.env.CATALOG_SERVICE_URL || 'http://localhost:3003/api/v1/products';
+      console.log(`[cart-service] Looking up barcode: "${barcode}" at ${catalogUrl}`);
       const response = await firstValueFrom(this.httpService.get(`${catalogUrl}/lookup?barcode=${barcode}`));
       return response.data.data;
-    } catch (error) {
+    } catch (error: any) {
+      console.error(`[cart-service] Lookup failed for barcode "${barcode}":`, error.message);
       throw new NotFoundException('Product not found in catalog');
     }
   }
@@ -138,52 +140,78 @@ export class CartService {
       throw new BadRequestException('Weight is required for this product');
     }
 
-    const effectiveQty = product.is_weight_based ? 1 : quantity;
-    const effectiveWeight = product.is_weight_based ? weight : undefined;
-    
-    const lineTotal = product.is_weight_based 
-      ? product.unit_price * weight! 
-      : product.unit_price * quantity;
-
-    const taxRate = getTaxRate(product.tax_class);
-    const taxAmount = lineTotal * taxRate;
-
-    const cartItem: CartItem = {
-      cart_item_id: uuidv4(),
-      sku: product.sku,
-      name: product.name,
-      image_url: product.image_url,
-      unit_price: product.unit_price,
-      quantity: effectiveQty,
-      weight: effectiveWeight,
-      line_total: Number(lineTotal.toFixed(2)),
-      tax_rate: taxRate,
-      tax_amount: Number(taxAmount.toFixed(2)),
-      requires_assisted_verification: product.is_age_restricted || false,
-    };
-
-    // 4. Update state
     const state = await this.getCartState(sessionId);
-    state.items.push(cartItem);
-    const updatedBill = await this.saveCartState(sessionId, state.items, state.appliedPromo);
+    const existingItemIndex = state.items.findIndex(i => i.sku === product.sku);
+    let cartItem: CartItem;
 
-    // 5. Write to DB
-    await this.pool.query(
-      `INSERT INTO cart_items (cart_item_id, session_id, sku, quantity, weight, unit_price, line_total, tax_rate, tax_amount, requires_assisted_verification, scan_source)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [cartItem.cart_item_id, sessionId, cartItem.sku, cartItem.quantity, cartItem.weight || null, cartItem.unit_price, cartItem.line_total, cartItem.tax_rate, cartItem.tax_amount, cartItem.requires_assisted_verification, scanSource]
-    );
+    if (existingItemIndex > -1 && !product.is_weight_based) {
+      // 4a. Update existing item
+      cartItem = state.items[existingItemIndex];
+      cartItem.quantity += quantity;
+      cartItem.line_total = Number((cartItem.unit_price * cartItem.quantity).toFixed(2));
+      cartItem.tax_amount = Number((cartItem.line_total * cartItem.tax_rate).toFixed(2));
+      
+      state.items[existingItemIndex] = cartItem;
+      const updatedBill = await this.saveCartState(sessionId, state.items, state.appliedPromo);
 
-    // 6. Publish Event
-    await this.publishEvent('item.scanned', {
-      session_id: sessionId,
-      cart_item_id: cartItem.cart_item_id,
-      sku: cartItem.sku,
-      quantity: cartItem.quantity,
-      requires_verification: cartItem.requires_assisted_verification
-    });
+      await this.pool.query(
+        `UPDATE cart_items SET quantity = $1, line_total = $2, tax_amount = $3 WHERE cart_item_id = $4`,
+        [cartItem.quantity, cartItem.line_total, cartItem.tax_amount, cartItem.cart_item_id]
+      );
+      
+      await this.publishEvent('item.updated', {
+        session_id: sessionId,
+        cart_item_id: cartItem.cart_item_id,
+        sku: cartItem.sku,
+        quantity: cartItem.quantity
+      });
 
-    return { success: true, data: updatedBill };
+      return { success: true, data: updatedBill };
+    } else {
+      // 4b. Add new item
+      const effectiveQty = product.is_weight_based ? 1 : quantity;
+      const effectiveWeight = product.is_weight_based ? weight : undefined;
+      
+      const lineTotal = product.is_weight_based 
+        ? product.unit_price * weight! 
+        : product.unit_price * quantity;
+
+      const taxRate = getTaxRate(product.tax_class);
+      const taxAmount = lineTotal * taxRate;
+
+      cartItem = {
+        cart_item_id: uuidv4(),
+        sku: product.sku,
+        name: product.name,
+        image_url: product.image_url,
+        unit_price: product.unit_price,
+        quantity: effectiveQty,
+        weight: effectiveWeight,
+        line_total: Number(lineTotal.toFixed(2)),
+        tax_rate: taxRate,
+        tax_amount: Number(taxAmount.toFixed(2)),
+        requires_assisted_verification: product.is_age_restricted || false,
+      };
+
+      state.items.push(cartItem);
+      const updatedBill = await this.saveCartState(sessionId, state.items, state.appliedPromo);
+
+      await this.pool.query(
+        `INSERT INTO cart_items (cart_item_id, session_id, sku, quantity, weight, unit_price, line_total, tax_rate, tax_amount, requires_assisted_verification, scan_source)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [cartItem.cart_item_id, sessionId, cartItem.sku, cartItem.quantity, cartItem.weight || null, cartItem.unit_price, cartItem.line_total, cartItem.tax_rate, cartItem.tax_amount, cartItem.requires_assisted_verification, scanSource]
+      );
+
+      await this.publishEvent('item.scanned', {
+        session_id: sessionId,
+        cart_item_id: cartItem.cart_item_id,
+        sku: cartItem.sku,
+        quantity: cartItem.quantity,
+        requires_verification: cartItem.requires_assisted_verification
+      });
+
+      return { success: true, data: updatedBill };
+    }
   }
 
   async updateItem(sessionId: string, itemId: string, updates: { quantity?: number, weight?: number }) {

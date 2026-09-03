@@ -42,5 +42,16 @@
     "is_weight_based": false,
     "is_age_restricted": true,
     "uom": "EA"
+  },
+  {
+    "sku": "SKU4001",
+    "barcode": "9806001234762",
+    "name": "Rainzo Packaged Drinking Water 500ml",
+    "description": "Packaged drinking water",
+    "unit_price": 10,
+    "tax_class": "GST_5",
+    "is_weight_based": false,
+    "is_age_restricted": false,
+    "uom": "EA"
   }
 ]
