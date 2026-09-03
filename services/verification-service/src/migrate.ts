@@ -8,10 +8,10 @@ const logger = createLogger('verification-migrate');
 
 async function migrate() {
   const pool = createPool({
-    host: 'localhost', 
-    port: 5433,
-    user: 'scango',
-    password: 'scango_dev_pass',
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: parseInt(process.env.POSTGRES_PORT || "5432"),
+    user: process.env.POSTGRES_USER || 'scango',
+    password: process.env.POSTGRES_PASSWORD || 'scango_dev_pass',
     database: 'scango_verification',
     max: 1,
   });
