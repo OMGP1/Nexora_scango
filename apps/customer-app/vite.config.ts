@@ -7,9 +7,6 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: {
-        enabled: true
-      },
       manifest: {
         name: 'ScanGo Customer App',
         short_name: 'ScanGo',
@@ -37,11 +34,10 @@ export default defineConfig({
     })
   ],
   server: {
-    host: true,
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://127.0.0.1:3000',
         changeOrigin: true,
       },
     },

@@ -15,7 +15,7 @@ export const ScanPage: React.FC = () => {
 
   const handleScan = async (barcode: string) => {
     try {
-      if (navigator.vibrate) navigator.vibrate(100);
+      try { navigator.vibrate?.(100); } catch (_) {}
       await addItem(barcode);
       setLastScanned(barcode);
       setTimeout(() => setLastScanned(null), 2000);
