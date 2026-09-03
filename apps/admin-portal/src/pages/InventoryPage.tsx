@@ -6,6 +6,7 @@ import { Scanner } from '../components/Scanner';
 
 export const InventoryPage: React.FC = () => {
   const [inventory, setInventory] = useState<any[]>([]);
+  const [catalog, setCatalog] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as any });
@@ -34,6 +35,9 @@ export const InventoryPage: React.FC = () => {
     if (activeTab === 'stock') loadInventory();
     else loadLedger();
   }, [activeTab]);
+
+  const loadCatalog = async () => { try { const data = await adminApi.fetchCatalog(); setCatalog(data); } catch {} };
+  useEffect(() => { loadCatalog(); }, []);
 
   const loadInventory = async () => {
     setLoading(true);
@@ -239,7 +243,7 @@ export const InventoryPage: React.FC = () => {
               <input style={inputStyle} value={receiveSku} onChange={e => setReceiveSku(e.target.value)} placeholder="e.g. SKU1001" />
               {showScannerReceive && (
                 <div style={{ marginTop: '12px' }}>
-                  <Scanner onScan={(code) => { setReceiveSku(code); setShowScannerReceive(false); }} />
+                  <Scanner onScan={(code) => { const product = catalog.find(p => p.barcode === code || p.sku === code); setReceiveSku(product ? product.sku : code); setShowScannerReceive(false); }} />
                 </div>
               )}
             </div>
@@ -272,7 +276,7 @@ export const InventoryPage: React.FC = () => {
               <input style={inputStyle} value={adjustSku} onChange={e => setAdjustSku(e.target.value)} placeholder="e.g. SKU1001" />
               {showScannerAdjust && (
                 <div style={{ marginTop: '12px' }}>
-                  <Scanner onScan={(code) => { setAdjustSku(code); setShowScannerAdjust(false); }} />
+                  <Scanner onScan={(code) => { const product = catalog.find(p => p.barcode === code || p.sku === code); setAdjustSku(product ? product.sku : code); setShowScannerAdjust(false); }} />
                 </div>
               )}
             </div>
