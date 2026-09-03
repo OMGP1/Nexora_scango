@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Toast } from '@scango/ui';
-import { Search } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 import { adminApi } from '../services/api/admin';
 
 export const CatalogPage: React.FC = () => {
@@ -9,6 +9,9 @@ export const CatalogPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState<number>(0);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as any });
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProduct, setNewProduct] = useState({ sku: '', name: '', barcode: '', unit_price: '', tax_class: 'standard' });
 
   useEffect(() => {
     adminApi.fetchCatalog().then(setItems);
@@ -28,6 +31,24 @@ export const CatalogPage: React.FC = () => {
     }
   };
 
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const product = await adminApi.createProduct({
+        ...newProduct,
+        unit_price: parseFloat(newProduct.unit_price)
+      });
+      setItems([product, ...items]);
+      setShowAddModal(false);
+      setNewProduct({ sku: '', name: '', barcode: '', unit_price: '', tax_class: 'standard' });
+      setToast({ visible: true, message: 'Product added successfully', type: 'success' });
+      setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
+    } catch (e) {
+      setToast({ visible: true, message: 'Failed to add product', type: 'error' });
+      setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
+    }
+  };
+
   const filteredItems = items.filter(item => 
     (item.name || '').toLowerCase().includes(search.toLowerCase()) || 
     (item.sku || '').includes(search)
@@ -35,8 +56,15 @@ export const CatalogPage: React.FC = () => {
 
   return (
     <div style={{ padding: '32px' }}>
-      <h1 style={{ margin: '0 0 8px', fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>Product Catalog</h1>
-      <p style={{ margin: '0 0 32px', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>Manage pricing and inventory</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+        <div>
+          <h1 style={{ margin: '0 0 8px', fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>Product Catalog</h1>
+          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>Manage pricing and inventory</p>
+        </div>
+        <Button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={16} /> Add Product
+        </Button>
+      </div>
 
       <Card padding="lg">
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}>
@@ -100,6 +128,48 @@ export const CatalogPage: React.FC = () => {
           </table>
         </div>
       </Card>
+      
+      {showAddModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <Card padding="lg" style={{ width: '100%', maxWidth: '400px', position: 'relative' }}>
+            <button onClick={() => setShowAddModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+              <X size={20} />
+            </button>
+            <h2 style={{ margin: '0 0 24px', fontSize: 'var(--font-size-xl)' }}>Add New Product</h2>
+            <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>Product Name</label>
+                <input required value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>SKU (Unique ID)</label>
+                <input required value={newProduct.sku} onChange={e => setNewProduct({...newProduct, sku: e.target.value})} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>Barcode</label>
+                <input required value={newProduct.barcode} onChange={e => setNewProduct({...newProduct, barcode: e.target.value})} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>Price (₹)</label>
+                  <input required type="number" step="0.01" value={newProduct.unit_price} onChange={e => setNewProduct({...newProduct, unit_price: e.target.value})} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>Tax Class</label>
+                  <select value={newProduct.tax_class} onChange={e => setNewProduct({...newProduct, tax_class: e.target.value})} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px' }}>
+                    <option value="standard">Standard</option>
+                    <option value="GST_0">GST 0%</option>
+                    <option value="GST_5">GST 5%</option>
+                    <option value="GST_12">GST 12%</option>
+                    <option value="GST_18">GST 18%</option>
+                  </select>
+                </div>
+              </div>
+              <Button type="submit" style={{ marginTop: '8px' }} fullWidth>Add Product</Button>
+            </form>
+          </Card>
+        </div>
+      )}
       
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast(t => ({ ...t, visible: false }))} />
     </div>

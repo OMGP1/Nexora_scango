@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Toast, Spinner } from '@scango/ui';
-import { Plus, Minus, Search, BarChart3 } from 'lucide-react';
+import { Plus, Minus, Search, BarChart3, Scan } from 'lucide-react';
 import { adminApi } from '../services/api/admin';
+import { Scanner } from '../components/Scanner';
 
 export const InventoryPage: React.FC = () => {
   const [inventory, setInventory] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export const InventoryPage: React.FC = () => {
   const [receiveSku, setReceiveSku] = useState('');
   const [receiveQty, setReceiveQty] = useState(0);
   const [receiveLoading, setReceiveLoading] = useState(false);
+  const [showScannerReceive, setShowScannerReceive] = useState(false);
 
   // Adjust stock modal state
   const [showAdjust, setShowAdjust] = useState(false);
@@ -21,6 +23,7 @@ export const InventoryPage: React.FC = () => {
   const [adjustQty, setAdjustQty] = useState(0);
   const [adjustReason, setAdjustReason] = useState('');
   const [adjustLoading, setAdjustLoading] = useState(false);
+  const [showScannerAdjust, setShowScannerAdjust] = useState(false);
 
   const storeId = 'STORE_001';
 
@@ -157,8 +160,18 @@ export const InventoryPage: React.FC = () => {
           <div style={modalContent} onClick={e => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 24px', fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Receive Stock</h2>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>SKU</label>
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>
+                <span>SKU</span>
+                <Button variant="ghost" size="sm" onClick={() => setShowScannerReceive(!showScannerReceive)} style={{ padding: '2px 8px', height: 'auto', fontSize: '12px' }}>
+                  <Scan size={14} style={{ marginRight: '4px' }} /> {showScannerReceive ? 'Close Scanner' : 'Scan'}
+                </Button>
+              </label>
               <input style={inputStyle} value={receiveSku} onChange={e => setReceiveSku(e.target.value)} placeholder="e.g. SKU1001" />
+              {showScannerReceive && (
+                <div style={{ marginTop: '12px' }}>
+                  <Scanner onScan={(code) => { setReceiveSku(code); setShowScannerReceive(false); }} />
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Quantity</label>
@@ -180,8 +193,18 @@ export const InventoryPage: React.FC = () => {
           <div style={modalContent} onClick={e => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 24px', fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Adjust Stock</h2>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>SKU</label>
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>
+                <span>SKU</span>
+                <Button variant="ghost" size="sm" onClick={() => setShowScannerAdjust(!showScannerAdjust)} style={{ padding: '2px 8px', height: 'auto', fontSize: '12px' }}>
+                  <Scan size={14} style={{ marginRight: '4px' }} /> {showScannerAdjust ? 'Close Scanner' : 'Scan'}
+                </Button>
+              </label>
               <input style={inputStyle} value={adjustSku} onChange={e => setAdjustSku(e.target.value)} placeholder="e.g. SKU1001" />
+              {showScannerAdjust && (
+                <div style={{ marginTop: '12px' }}>
+                  <Scanner onScan={(code) => { setAdjustSku(code); setShowScannerAdjust(false); }} />
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>Quantity (+/-)</label>

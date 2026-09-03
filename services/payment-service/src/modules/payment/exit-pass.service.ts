@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import Redis from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,13 +27,13 @@ export class ExitPassService {
     // Read the token data
     const dataStr = await this.redis.get(`exit_pass:${token}`);
     if (!dataStr) {
-      throw new Error('Invalid or expired exit pass');
+      throw new BadRequestException('Invalid or expired exit pass');
     }
 
     // Single-use guarantee: atomically delete it so it can't be reused
     const deleted = await this.redis.del(`exit_pass:${token}`);
     if (deleted !== 1) {
-      throw new Error('Exit pass already used');
+      throw new BadRequestException('Exit pass already used');
     }
 
     return JSON.parse(dataStr);
