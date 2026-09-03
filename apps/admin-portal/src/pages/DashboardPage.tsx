@@ -1,28 +1,25 @@
 import React from 'react';
+import { Card } from '@scango/ui';
+
+const metrics = [
+  { label: 'Total Stores', value: '4' },
+  { label: 'Active Sessions', value: '23' },
+  { label: 'Revenue Today', value: '\u20B91.2M' },
+  { label: 'Exception Rate', value: '3.2%' },
+];
 
 export const DashboardPage: React.FC = () => {
   return (
-    <div>
-      <h1 style={{ margin: '0 0 24px 0', fontSize: '1.875rem' }}>Enterprise Dashboard</h1>
-      <p style={{ color: '#6b7280', marginBottom: '24px' }}>Overview of global metrics across all stores.</p>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Total Stores</div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 700, marginTop: '8px' }}>14</div>
-        </div>
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Active Sessions</div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 700, marginTop: '8px' }}>284</div>
-        </div>
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Revenue (Today)</div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 700, marginTop: '8px', color: '#10b981' }}>₹1.2M</div>
-        </div>
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Exception Rate</div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 700, marginTop: '8px', color: '#f59e0b' }}>3.2%</div>
-        </div>
+    <div style={{ padding: '32px' }}>
+      <h1 style={{ margin: '0 0 8px', fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>Dashboard</h1>
+      <p style={{ margin: '0 0 32px', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>Enterprise overview</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        {metrics.map(m => (
+          <Card key={m.label} padding="lg">
+            <p style={{ margin: '0 0 8px', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)', fontWeight: 500 }}>{m.label}</p>
+            <p style={{ margin: 0, fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>{m.value}</p>
+          </Card>
+        ))}
       </div>
     </div>
   );

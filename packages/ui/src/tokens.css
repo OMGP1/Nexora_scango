@@ -1,104 +1,118 @@
 /* =====================================================
    @scango/ui — Design Tokens
-   ScanGo Design System CSS Custom Properties
+   ScanGo Luxury Minimal Design System
    ===================================================== */
 
 :root {
-  /* ── Color Palette ─────────────────────────────── */
-  --color-primary: #4f46e5;         /* Indigo 600 */
-  --color-primary-hover: #4338ca;   /* Indigo 700 */
-  --color-primary-light: #e0e7ff;   /* Indigo 100 */
-  --color-primary-50: #eef2ff;
+  /* ── Primary (Jet Black) ────────────────────────── */
+  --color-primary: #1a1a1a;
+  --color-primary-hover: #000000;
+  --color-primary-light: #f0f0f0;
+  --color-primary-50: #f5f5f5;
 
-  --color-secondary: #0d9488;       /* Teal 600 */
-  --color-secondary-hover: #0f766e;
-  --color-secondary-light: #ccfbf1;
+  /* ── Secondary (Warm Gray) ──────────────────────── */
+  --color-secondary: #6b6b6b;
+  --color-secondary-hover: #555555;
+  --color-secondary-light: #f0eeeb;
 
-  --color-accent: #f59e0b;          /* Amber 500 */
-  --color-accent-hover: #d97706;
+  /* ── Accent (Warm Gold) ─────────────────────────── */
+  --color-accent: #c4a265;
+  --color-accent-hover: #b08d4f;
 
-  --color-success: #10b981;         /* Emerald 500 */
-  --color-success-light: #d1fae5;
-  --color-success-bg: #ecfdf5;
+  /* ── Status Colors (Muted) ──────────────────────── */
+  --color-success: #2d8a56;
+  --color-success-light: #e8f5ee;
+  --color-success-bg: #f0faf4;
 
-  --color-warning: #f59e0b;
-  --color-warning-light: #fef3c7;
-  --color-warning-bg: #fffbeb;
+  --color-warning: #c07d2b;
+  --color-warning-light: #fdf3e3;
+  --color-warning-bg: #fef9f0;
 
-  --color-danger: #ef4444;          /* Red 500 */
-  --color-danger-light: #fee2e2;
+  --color-danger: #c94444;
+  --color-danger-light: #fde8e8;
   --color-danger-bg: #fef2f2;
 
-  --color-info: #3b82f6;            /* Blue 500 */
-  --color-info-light: #dbeafe;
+  --color-info: #3b7dd8;
+  --color-info-light: #e8f0fc;
 
-  /* ── Neutral Palette ───────────────────────────── */
-  --color-bg: #f8fafc;
+  /* ── Neutral Palette (Warm) ─────────────────────── */
+  --color-bg: #faf9f6;
+  --color-bg-warm: #faf9f6;
+  --color-bg-warm-accent: #f5f0eb;
   --color-bg-card: #ffffff;
   --color-bg-elevated: #ffffff;
-  --color-bg-overlay: rgba(15, 23, 42, 0.5);
+  --color-bg-overlay: rgba(26, 26, 26, 0.4);
+  --color-bg-sidebar: #ffffff;
 
-  --color-text: #0f172a;            /* Slate 900 */
-  --color-text-secondary: #475569;  /* Slate 600 */
-  --color-text-muted: #94a3b8;      /* Slate 400 */
+  --color-text: #1a1a1a;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #a3a3a3;
   --color-text-inverse: #ffffff;
 
-  --color-border: #e2e8f0;          /* Slate 200 */
+  --color-border: #e8e5e1;
+  --color-border-light: #f0eeeb;
   --color-border-focus: var(--color-primary);
 
   /* ── Typography ────────────────────────────────── */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
 
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;   /* 18px */
-  --font-size-xl: 1.25rem;    /* 20px */
-  --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem;  /* 30px */
-  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-lg: 1.0625rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --line-height-tight: 1.25;
+  --line-height-tight: 1.2;
   --line-height-normal: 1.5;
-  --line-height-relaxed: 1.75;
+  --line-height-relaxed: 1.7;
 
-  /* ── Spacing ───────────────────────────────────── */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+
+  /* ── Spacing (8px grid) ────────────────────────── */
   --space-0: 0;
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
 
   /* ── Border Radius ─────────────────────────────── */
-  --radius-sm: 0.375rem;   /* 6px */
-  --radius-md: 0.5rem;     /* 8px */
-  --radius-lg: 0.75rem;    /* 12px */
-  --radius-xl: 1rem;       /* 16px */
-  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* ── Shadows ───────────────────────────────────── */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
+  /* ── Shadows (Warm) ────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.04);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.06);
 
   /* ── Transitions ───────────────────────────────── */
   --transition-fast: 150ms ease;
-  --transition-base: 250ms ease;
+  --transition-base: 200ms ease;
   --transition-slow: 350ms ease;
   --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
@@ -109,17 +123,39 @@
   --z-modal: 400;
   --z-toast: 500;
   --z-tooltip: 600;
+
+  /* ── Layout ────────────────────────────────────── */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+  --bottom-bar-height: 80px;
+  --max-content-width: 1200px;
 }
 
 /* ── High Contrast Mode ──────────────────────────── */
 [data-theme="high-contrast"] {
   --color-bg: #000000;
   --color-bg-card: #1a1a1a;
+  --color-bg-warm: #000000;
   --color-text: #ffffff;
   --color-text-secondary: #e0e0e0;
   --color-text-muted: #b0b0b0;
   --color-border: #555555;
-  --color-primary: #818cf8;
-  --color-primary-hover: #a5b4fc;
-  --font-size-base: 1.125rem;
+  --color-primary: #ffffff;
+  --color-primary-hover: #e0e0e0;
+  --font-size-base: 1.0625rem;
+}
+
+/* ── Responsive Overrides ────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.125rem;
+    --font-size-2xl: 1.25rem;
+    --font-size-3xl: 1.5rem;
+    --font-size-4xl: 2rem;
+    
+    --sidebar-width: 0px;
+    --header-height: 56px;
+  }
 }
