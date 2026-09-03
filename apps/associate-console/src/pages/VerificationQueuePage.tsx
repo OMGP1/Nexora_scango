@@ -1,74 +1,64 @@
 import React, { useEffect, useState } from 'react';
-import { adminApi, Session } from '../services/api/admin';
-import { Check, X } from 'lucide-react';
+import { Card, Button, Badge, EmptyState } from '@scango/ui';
+import { ShieldCheck } from 'lucide-react';
+import { adminApi } from '../services/api/admin';
 
 export const VerificationQueuePage: React.FC = () => {
-  const [queue, setQueue] = useState<Session[]>([]);
+  const [queue, setQueue] = useState<any[]>([]);
+  const [clearingId, setClearingId] = useState<string | null>(null);
 
-  const fetchQueue = () => {
-    adminApi.fetchVerificationQueue().then(setQueue);
-  };
+  const loadQueue = () => adminApi.fetchVerificationQueue().then(setQueue);
 
   useEffect(() => {
-    fetchQueue();
+    loadQueue();
+    const interval = setInterval(loadQueue, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleClear = async (id: string) => {
-    const success = await adminApi.clearSession(id, 'Visual check passed');
-    if (success) {
-      fetchQueue();
+    setClearingId(id);
+    try {
+      await adminApi.clearSession(id, 'Visual check passed');
+      await loadQueue();
+    } catch (e) {
+      console.error('Failed to clear', e);
+    } finally {
+      setClearingId(null);
     }
   };
 
   return (
-    <div>
-      <h1 style={{ margin: '0 0 24px 0', fontSize: '1.875rem' }}>Verification Queue (LP)</h1>
-      
+    <div style={{ padding: '32px' }}>
+      <h1 style={{ margin: '0 0 8px', fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>Verification Queue</h1>
+      <p style={{ margin: '0 0 32px', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>{queue.length} sessions held for review</p>
+
       {queue.length === 0 ? (
-        <div style={{ padding: '48px', textAlign: 'center', color: '#6b7280', backgroundColor: 'white', borderRadius: '12px' }}>
-          No sessions currently held.
-        </div>
+        <EmptyState
+          icon={<ShieldCheck size={48} />}
+          title="All clear"
+          description="No sessions are currently held for verification."
+        />
       ) : (
-        <div style={{ display: 'grid', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {queue.map(s => (
-            <div key={s.id} style={{ 
-              backgroundColor: 'white', 
-              padding: '24px', 
-              borderRadius: '12px', 
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <h3 style={{ margin: 0, fontFamily: 'monospace', fontSize: '1.25rem' }}>{s.id}</h3>
-                  <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: '#fee2e2', color: '#991b1b', fontSize: '0.75rem', fontWeight: 600 }}>HELD</span>
+            <Card key={s.id} padding="lg">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div>
+                  <p style={{ margin: '0 0 4px', fontFamily: 'var(--font-family-mono)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{s.id?.substring(0, 8).toUpperCase()}</p>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>Customer: {s.customer_id?.substring(0, 8) || 'Guest'}</p>
                 </div>
-                <div style={{ color: '#4b5563', fontSize: '0.875rem' }}>
-                  Customer: {s.customer_id} | Items: {s.item_count} | Value: ₹{s.total_value}
+                <Badge variant="danger">HELD</Badge>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-border-light)' }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{s.item_count || 0} items \u2022 \u20B9{s.total_value || 0}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  <Button variant="outline" size="sm" onClick={() => handleClear(s.id)} disabled={clearingId === s.id}>
+                    {clearingId === s.id ? 'Clearing...' : 'Clear'}
+                  </Button>
+                  <Button variant="danger" size="sm">Escalate</Button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  onClick={() => handleClear(s.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600
-                  }}
-                >
-                  <Check size={18} /> Clear
-                </button>
-                <button 
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600
-                  }}
-                >
-                  <X size={18} /> Escalate
-                </button>
-              </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

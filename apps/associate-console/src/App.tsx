@@ -6,6 +6,8 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SessionsListPage } from './pages/SessionsListPage';
 import { VerificationQueuePage } from './pages/VerificationQueuePage';
+import { InventoryPage } from './pages/InventoryPage';
+import { ScanAndVerifyPage } from './pages/ScanAndVerifyPage';
 
 export default function App() {
   return (
@@ -24,6 +26,8 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="sessions" element={<SessionsListPage />} />
             <Route path="verification-queue" element={<VerificationQueuePage />} />
+            <Route path="inventory" element={<InventoryPage />} />
+            <Route path="scan-verify" element={<ScanAndVerifyPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

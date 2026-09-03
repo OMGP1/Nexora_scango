@@ -1,57 +1,90 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, AlertTriangle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, AlertTriangle, LogOut, Package, ScanLine, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import './Layout.css';
+
+const navItems = [
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/sessions', label: 'Live Sessions', icon: Users },
+  { path: '/verification-queue', label: 'Verification Queue', icon: AlertTriangle },
+  { path: '/inventory', label: 'Inventory Management', icon: Package },
+  { path: '/scan-verify', label: 'Scan & Verify', icon: ScanLine },
+];
 
 export const Layout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: '/sessions', label: 'Live Sessions', icon: <Users size={20} /> },
-    { path: '/verification-queue', label: 'Verification Queue', icon: <AlertTriangle size={20} /> },
-  ];
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const closeMenu = () => setMobileMenuOpen(false);
+
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="layout-container">
+      {/* Mobile Overlay */}
+      <div 
+        className={`sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`}
+        onClick={closeMenu}
+      />
+
       {/* Sidebar */}
-      <aside style={{ width: '250px', backgroundColor: '#1f2937', color: 'white', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '24px', fontSize: '1.5rem', fontWeight: 'bold', borderBottom: '1px solid #374151' }}>
-          Associate Console
+      <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+        {/* Brand */}
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--color-border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>
+              ScanGo
+            </h1>
+            <p style={{ margin: '2px 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+              Associate Console
+            </p>
+          </div>
+          <button className="mobile-header" style={{ display: mobileMenuOpen ? 'block' : 'none', background: 'none', border: 'none', padding: 0 }} onClick={closeMenu}>
+            <X size={24} color="var(--color-text)" />
+          </button>
         </div>
-        <nav style={{ flex: 1, padding: '16px 0' }}>
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '12px' }}>
+          {navItems.map(item => {
+            const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+            const Icon = item.icon;
             return (
-              <Link 
-                key={item.path} 
+              <Link
+                key={item.path}
                 to={item.path}
+                onClick={closeMenu}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '12px 24px',
-                  color: isActive ? 'white' : '#9ca3af',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  marginBottom: '4px',
+                  fontSize: 'var(--font-size-sm)',
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                  backgroundColor: isActive ? 'var(--color-bg-warm-accent)' : 'transparent',
+                  transition: 'all var(--transition-fast)',
                   textDecoration: 'none',
-                  backgroundColor: isActive ? '#374151' : 'transparent',
-                  borderLeft: isActive ? '4px solid #3b82f6' : '4px solid transparent'
                 }}
               >
-                {item.icon}
-                <span>{item.label}</span>
+                <Icon size={18} />
+                {item.label}
               </Link>
             );
           })}
         </nav>
-        <div style={{ padding: '16px 24px', borderTop: '1px solid #374151' }}>
-          <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 8px 0', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+        {/* User */}
+        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border-light)' }}>
+          <p style={{ margin: '0 0 8px', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.email}
           </p>
           <button
@@ -62,10 +95,10 @@ export const Layout: React.FC = () => {
               gap: '8px',
               background: 'none',
               border: 'none',
-              color: '#9ca3af',
+              color: 'var(--color-text-muted)',
+              fontSize: 'var(--font-size-sm)',
               cursor: 'pointer',
-              fontSize: '0.875rem',
-              padding: 0,
+              padding: '6px 0',
             }}
           >
             <LogOut size={16} />
@@ -75,8 +108,23 @@ export const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
-        <Outlet />
+      <main className="main-content">
+        {/* Mobile Header (Hidden on Desktop) */}
+        <header className="mobile-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              onClick={() => setMobileMenuOpen(true)}
+              style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', display: 'flex' }}
+            >
+              <Menu size={24} color="var(--color-text)" />
+            </button>
+            <h2 style={{ margin: 0, fontSize: 'var(--font-size-lg)', fontWeight: 600 }}>ScanGo Associate</h2>
+          </div>
+        </header>
+
+        <div style={{ padding: '24px', flex: 1, overflowY: 'auto' }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

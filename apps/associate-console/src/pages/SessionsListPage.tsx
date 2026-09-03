@@ -1,64 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { adminApi, Session } from '../services/api/admin';
+import { Card, Badge } from '@scango/ui';
+import { adminApi } from '../services/api/admin';
 
 export const SessionsListPage: React.FC = () => {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
 
   useEffect(() => {
     adminApi.fetchActiveSessions().then(setSessions);
+    const interval = setInterval(() => adminApi.fetchActiveSessions().then(setSessions), 10000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div>
-      <h1 style={{ margin: '0 0 24px 0', fontSize: '1.875rem' }}>Live Sessions</h1>
-      <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-            <tr>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563' }}>Session ID</th>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563' }}>Customer ID</th>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563' }}>Status</th>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563' }}>Verification</th>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563' }}>Items</th>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563' }}>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessions.map(s => (
-              <tr key={s.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '16px', color: '#111827', fontFamily: 'monospace' }}>{s.id}</td>
-                <td style={{ padding: '16px', color: '#6b7280' }}>{s.customer_id}</td>
-                <td style={{ padding: '16px' }}>
-                  <span style={{ 
-                    padding: '4px 8px', 
-                    borderRadius: '9999px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: 600,
-                    backgroundColor: s.status === 'ACTIVE' ? '#d1fae5' : '#fef3c7',
-                    color: s.status === 'ACTIVE' ? '#065f46' : '#92400e'
-                  }}>
-                    {s.status}
-                  </span>
-                </td>
-                <td style={{ padding: '16px' }}>
-                  <span style={{ 
-                    padding: '4px 8px', 
-                    borderRadius: '9999px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: 600,
-                    backgroundColor: s.verification_status === 'HELD' ? '#fee2e2' : '#f3f4f6',
-                    color: s.verification_status === 'HELD' ? '#991b1b' : '#374151'
-                  }}>
-                    {s.verification_status}
-                  </span>
-                </td>
-                <td style={{ padding: '16px', color: '#374151' }}>{s.item_count}</td>
-                <td style={{ padding: '16px', color: '#374151' }}>₹{s.total_value}</td>
+    <div style={{ padding: '32px' }}>
+      <h1 style={{ margin: '0 0 8px', fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)', letterSpacing: 'var(--letter-spacing-tight)' }}>Live Sessions</h1>
+      <p style={{ margin: '0 0 32px', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>{sessions.length} active sessions</p>
+
+      <Card padding="none">
+        <div className="table-responsive">
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Session ID</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Status</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Verification</th>
+                <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Items</th>
+                <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Value</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {sessions.map(s => (
+                <tr key={s.id} style={{ borderBottom: '1px solid var(--color-border-light)', transition: 'background var(--transition-fast)' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'var(--font-family-mono)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>{s.id?.substring(0, 8)}</td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <Badge variant={s.status === 'ACTIVE' ? 'success' : 'warning'}>{s.status}</Badge>
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <Badge variant={s.verification_status === 'HELD' ? 'danger' : 'default'}>{s.verification_status || 'N/A'}</Badge>
+                  </td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--color-text)' }}>{s.item_count || 0}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)' }}>\u20B9{s.total_value || 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 };
