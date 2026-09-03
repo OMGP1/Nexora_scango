@@ -72,8 +72,12 @@ app.use((_req, res, next) => {
 const JWT_SECRET = process.env.JWT_SECRET || 'scango-dev-jwt-secret-change-in-production';
 
 app.use('/api/v1', async (req, res, next) => {
-  // Skip auth for health endpoints and auth routes
-  if (req.path.includes('/health') || req.path.startsWith('/auth')) {
+  // Skip auth for health endpoints, auth routes, and webhooks
+  if (
+    req.path.includes('/health') || 
+    req.path.startsWith('/auth') || 
+    req.path.includes('/payment/webhook')
+  ) {
     return next();
   }
 
@@ -304,9 +308,23 @@ const serviceHealthRoutes = [
   { path: '/api/v1/analytics-service/health', target: `http://${getHost('analytics-service')}:${SERVICE_PORTS.ANALYTICS_SERVICE}` },
 ];
 
-for (const route of serviceHealthRoutes) {
-  app.use(route.path, createProxyMiddleware({ target: route.target, changeOrigin: true, pathRewrite: { [route.path]: '/health' } }));
-}
+import axios from 'axios';
+
+app.get('/api/v1/:service/health', async (req, res) => {
+  const service = req.params.service;
+  const route = serviceHealthRoutes.find(r => r.path === `/api/v1/${service}/health`);
+  
+  if (!route) {
+    return res.status(404).json({ success: false, message: 'Health route not found' });
+  }
+
+  try {
+    const response = await axios.get(route.target + '/health', { timeout: 5000 });
+    res.status(response.status).json(response.data);
+  } catch (error: any) {
+    res.status(error.response?.status || 503).json(error.response?.data || { success: false, message: 'Service down' });
+  }
+});
 
 // ── 404 Fallback ───────────────────────────────────
 

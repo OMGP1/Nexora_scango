@@ -31,7 +31,7 @@ export function createPool(config: DbConfig): Pool {
     max: config.max ?? 20,
     idleTimeoutMillis: config.idleTimeoutMillis ?? 30000,
     connectionTimeoutMillis: config.connectionTimeoutMillis ?? 5000,
-    ...(config.host !== 'localhost' && config.host !== '127.0.0.1' && { ssl: { rejectUnauthorized: false } }),
+    ...((config.host.endsWith('.render.com') || process.env.POSTGRES_SSL === 'true') ? { ssl: { rejectUnauthorized: false } } : {}),
   };
 
   const pool = new Pool(poolConfig);

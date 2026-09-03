@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { Pool } from 'pg';
+import { createPool } from '@scango/db';
 import { CartController } from './cart.controller';
 import { CartService } from './cart.service';
 
@@ -12,7 +12,7 @@ import { CartService } from './cart.service';
     {
       provide: 'DB_POOL',
       useFactory: () => {
-        return new Pool({
+        return createPool({
           host: process.env.POSTGRES_HOST || 'localhost',
           port: parseInt(process.env.POSTGRES_PORT || '5432'),
           user: process.env.POSTGRES_USER || 'postgres',

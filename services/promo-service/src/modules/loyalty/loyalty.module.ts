@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { Pool } from 'pg';
+import { createPool } from '@scango/db';
 import { LoyaltyController } from './loyalty.controller';
 import { LoyaltyService } from './loyalty.service';
 import { LoyaltyConsumer } from './loyalty.consumer';
@@ -12,7 +12,7 @@ import { LoyaltyConsumer } from './loyalty.consumer';
     {
       provide: 'DB_POOL',
       useFactory: () => {
-        return new Pool({
+        return createPool({
           host: process.env.POSTGRES_HOST || 'localhost',
           port: parseInt(process.env.POSTGRES_PORT || '5432'),
           user: process.env.POSTGRES_USER || 'postgres',

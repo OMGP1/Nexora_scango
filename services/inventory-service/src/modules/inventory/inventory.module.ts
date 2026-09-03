@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { Pool } from 'pg';
+import { createPool } from '@scango/db';
 import { ScheduleModule } from '@nestjs/schedule';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
@@ -18,7 +18,7 @@ import { ReconciliationJob } from '../../jobs/reconciliation.job';
     {
       provide: 'DB_POOL',
       useFactory: () => {
-        return new Pool({
+        return createPool({
           host: process.env.POSTGRES_HOST || 'localhost',
           port: parseInt(process.env.POSTGRES_PORT || '5432'),
           user: process.env.POSTGRES_USER || 'postgres',

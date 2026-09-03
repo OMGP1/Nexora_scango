@@ -1,11 +1,11 @@
-import { Pool } from 'pg';
+import { createPool } from '@scango/db';
 import * as fs from 'fs';
 import * as path from 'path';
 
 async function seed() {
-  const pool = new Pool({
+  const pool = createPool({
     host: process.env.POSTGRES_HOST || 'localhost',
-    port: parseInt(process.env.POSTGRES_PORT || '5433'),
+    port: parseInt(process.env.POSTGRES_PORT || '5432'),
     user: process.env.POSTGRES_USER || 'scango',
     password: process.env.POSTGRES_PASSWORD || 'scango_dev_pass',
     database: 'scango_inventory',

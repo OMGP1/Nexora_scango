@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { GateController } from './gate.controller';
 import { GateService } from './gate.service';
 import { VerificationService } from '../verification/verification.service';
-import { Pool } from 'pg';
+import { createPool } from '@scango/db';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
@@ -14,7 +14,7 @@ import { HttpModule } from '@nestjs/axios';
     {
       provide: 'DB_POOL',
       useFactory: () => {
-        return new Pool({
+        return createPool({
           host: process.env.POSTGRES_HOST || 'localhost',
           port: parseInt(process.env.POSTGRES_PORT || '5432'),
           user: process.env.POSTGRES_USER || 'postgres',

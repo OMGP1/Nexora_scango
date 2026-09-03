@@ -21,6 +21,10 @@ export class InventoryConsumer implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    this.startConsumer().catch(err => this.logger.error('Consumer failed:', err));
+  }
+
+  async startConsumer() {
     await this.consumer.connect();
     const topics = [
       'item.scanned',

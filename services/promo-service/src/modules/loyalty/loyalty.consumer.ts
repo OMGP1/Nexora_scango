@@ -16,6 +16,10 @@ export class LoyaltyConsumer implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    this.startConsumer().catch(err => this.logger.error('Consumer failed:', err));
+  }
+
+  async startConsumer() {
     await this.consumer.connect();
     await this.consumer.subscribe({ topic: 'payment.confirmed', fromBeginning: false });
 
