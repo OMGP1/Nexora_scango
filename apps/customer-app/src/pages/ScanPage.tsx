@@ -87,8 +87,8 @@ export const ScanPage: React.FC = () => {
             <Input
               placeholder="e.g. 8901030875021"
               value={manualBarcode}
-              onChange={(e) => setManualBarcode(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleManualAdd()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualBarcode(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleManualAdd()}
               style={{ fontFamily: 'var(--font-family-mono)', fontSize: 'var(--font-size-sm)' }}
             />
             <Button variant="primary" size="sm" onClick={handleManualAdd} style={{ flexShrink: 0 }}>
