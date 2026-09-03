@@ -9,7 +9,7 @@ import { Button, Card, Spinner } from '@scango/ui';
 
 export const ReceiptPage: React.FC = () => {
   const { id: receiptId } = useParams<{ id: string }>();
-  const { sessionId } = useSession();
+  const { sessionId, clearLocalSession } = useSession();
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   const [receipt, setReceipt] = useState<any>(null);
@@ -131,7 +131,10 @@ export const ReceiptPage: React.FC = () => {
         </Card>
 
         <Button
-          onClick={() => navigate('/')}
+          onClick={() => {
+            clearLocalSession();
+            navigate('/');
+          }}
           variant="secondary"
           fullWidth
           size="lg"

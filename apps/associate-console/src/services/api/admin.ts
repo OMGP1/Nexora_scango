@@ -43,6 +43,11 @@ export const adminApi = {
     return res.data.data || [];
   },
 
+  getSessionBill: async (sessionId: string) => {
+    const res = await api.get(`/sessions/${sessionId}/bill`);
+    return res.data.data;
+  },
+
   clearSession: async (id: string, reason: string): Promise<boolean> => {
     await api.post(`/sessions/${id}/verification/clear`, { reason });
     return true;

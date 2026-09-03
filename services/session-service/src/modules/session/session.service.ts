@@ -131,6 +131,23 @@ export class SessionService {
     return { success: true, data: session };
   }
 
+  async completeSession(sessionId: string) {
+    const { data: session } = await this.getSession(sessionId);
+    
+    session.status = 'completed';
+    // Clear from Redis active pool but maybe keep short TTL for polling to fetch the final status
+    await this.redis.set(`session:${sessionId}`, JSON.stringify(session), 'EX', 300);
+    
+    await this.pool.query('UPDATE sessions SET status = $1 WHERE session_id = $2', ['completed', sessionId]);
+
+    for (const d of session.devices) {
+      await this.redis.del(`device_session:${d}`);
+    }
+
+    await this.publishEvent('session.completed', session);
+    return { success: true, data: session };
+  }
+
   async abandonSession(sessionId: string) {
     const { data: session } = await this.getSession(sessionId);
     

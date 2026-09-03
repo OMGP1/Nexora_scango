@@ -27,6 +27,26 @@ export const CheckoutPage: React.FC = () => {
     }
   }, [sessionId, billSummary, navigate]);
 
+  // Poll for session completion (in case associate verifies counter payment)
+  useEffect(() => {
+    if (selectedMethod !== 'counter' || !sessionId) return;
+    
+    const interval = setInterval(async () => {
+      try {
+        const { default: api } = await import('../services/api');
+        const res = await api.get(`/sessions/${sessionId}`);
+        if (res.data?.data?.status === 'completed') {
+          clearInterval(interval);
+          navigate('/receipt');
+        }
+      } catch (e) {
+        console.error('Failed to poll session status', e);
+      }
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [selectedMethod, sessionId, navigate]);
+
   const handleSelectMethod = async (method: PaymentMethod) => {
     setSelectedMethod(method);
     setError('');

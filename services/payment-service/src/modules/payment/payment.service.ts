@@ -250,6 +250,15 @@ export class PaymentService {
         }) }]
       });
 
+      // Tell session-service to complete the session
+      try {
+        const sessionUrl = process.env.SESSION_SERVICE_URL || 'http://session-service:3002/api/v1/sessions';
+        await firstValueFrom(this.httpService.post(`${sessionUrl}/${payment.session_id}/complete`));
+      } catch (err) {
+        // Just log the error, don't fail the payment confirmation
+        console.error('Failed to mark session as completed', err);
+      }
+
     } catch (e) {
       await client.query('ROLLBACK');
       throw e;
@@ -374,6 +383,35 @@ export class PaymentService {
     return { success: true, message: 'Refunded' };
   }
   async validateExitPass(token: string) {
-    return this.exitPassService.validateExitPass(token);
+    const payload = await this.exitPassService.validateExitPass(token);
+    
+    try {
+      const receipt = await this.getReceipt(payload.session_id);
+      if (receipt && receipt.items) {
+        const items = typeof receipt.items === 'string' ? JSON.parse(receipt.items) : receipt.items;
+        
+        const inventoryUrl = process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:3010/api/v1/inventory';
+        
+        for (const item of items) {
+          const sku = item.sku || item.id;
+          if (!sku) continue;
+          
+          try {
+            await firstValueFrom(this.httpService.post(`${inventoryUrl}/${payload.store_id || 'STORE001'}/adjust`, {
+              sku: sku,
+              quantity: -Math.abs(item.quantity || 1),
+              reason: 'SALE',
+              adjusted_by: 'exit_pass_validation'
+            }));
+          } catch (e) {
+            console.error(`Failed to deduct inventory for sku ${sku}:`, e);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to process inventory deduction during exit pass validation', err);
+    }
+    
+    return payload;
   }
 }

@@ -7,6 +7,7 @@ interface SessionContextType {
   joinCode: string | null;
   createSession: (storeId: string) => Promise<void>;
   abandonSession: () => Promise<void>;
+  clearLocalSession: () => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -36,18 +37,22 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('join_code', data.join_code);
   };
 
+  const clearLocalSession = () => {
+    setSessionId(null);
+    setJoinCode(null);
+    localStorage.removeItem('session_id');
+    localStorage.removeItem('join_code');
+  };
+
   const abandonSession = async () => {
     if (sessionId) {
       await api.delete(`/sessions/${sessionId}`);
-      setSessionId(null);
-      setJoinCode(null);
-      localStorage.removeItem('session_id');
-      localStorage.removeItem('join_code');
+      clearLocalSession();
     }
   };
 
   return (
-    <SessionContext.Provider value={{ sessionId, joinCode, createSession, abandonSession }}>
+    <SessionContext.Provider value={{ sessionId, joinCode, createSession, abandonSession, clearLocalSession }}>
       {children}
     </SessionContext.Provider>
   );

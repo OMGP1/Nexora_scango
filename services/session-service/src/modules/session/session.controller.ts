@@ -41,6 +41,11 @@ export class SessionController {
     return this.sessionService.resumeSession(id);
   }
 
+  @Post(':id/complete')
+  async completeSession(@Param('id') id: string) {
+    return this.sessionService.completeSession(id);
+  }
+
   @Delete(':id')
   async abandonSession(@Param('id') id: string) {
     return this.sessionService.abandonSession(id);

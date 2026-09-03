@@ -10,6 +10,7 @@ export const ScanAndVerifyPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as any });
   const [passData, setPassData] = useState<any>(null); // For exit pass success display
+  const [previewBill, setPreviewBill] = useState<{session_id: string, otp: string, bill: any} | null>(null);
 
   // Payment State
   const [activeSessions, setActiveSessions] = useState<Session[]>([]);
@@ -47,6 +48,7 @@ export const ScanAndVerifyPage: React.FC = () => {
       setToast({ visible: true, message: 'Payment successfully verified!', type: 'success' });
       setPaySessionId('');
       setPayOtp('');
+      setPreviewBill(null);
       fetchSessions();
       setUseScanner(false);
     } catch (err: any) {
@@ -74,12 +76,25 @@ export const ScanAndVerifyPage: React.FC = () => {
     }
   };
 
+  const fetchPreview = async (sessionId: string, otp: string) => {
+    setLoading(true);
+    try {
+      const bill = await adminApi.getSessionBill(sessionId);
+      setPreviewBill({ session_id: sessionId, otp, bill });
+      setUseScanner(false);
+    } catch (err: any) {
+      setToast({ visible: true, message: err.response?.data?.message || 'Failed to fetch bill summary', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUniversalScan = (data: string) => {
     // 1. Check if it's a JSON payload (Counter Payment)
     try {
       const parsed = JSON.parse(data);
       if (parsed.session_id && parsed.otp) {
-        processPayment(parsed.session_id, parsed.otp);
+        fetchPreview(parsed.session_id, parsed.otp);
         return;
       }
     } catch (err) {
@@ -93,7 +108,7 @@ export const ScanAndVerifyPage: React.FC = () => {
   const handleManualPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!paySessionId || !payOtp) return;
-    processPayment(paySessionId, payOtp);
+    fetchPreview(paySessionId, payOtp);
   };
 
   const handleManualExit = (e: React.FormEvent) => {
@@ -108,6 +123,37 @@ export const ScanAndVerifyPage: React.FC = () => {
         <h1 style={{ margin: '0 0 8px', fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--color-text)' }}>Scan & Verify</h1>
         <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>Process counter payments and validate exit passes in one place</p>
       </div>
+
+      {previewBill && (
+        <Card padding="lg" style={{ width: '100%', maxWidth: '480px', marginBottom: '24px', animation: 'scango-fade-in 0.2s' }}>
+          <h2 style={{ margin: '0 0 16px', fontSize: 'var(--font-size-xl)' }}>Verify Customer Bill</h2>
+          <div style={{ backgroundColor: 'var(--color-bg-warm)', padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
+            <p style={{ margin: '0 0 8px', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>Session: <strong style={{color: 'var(--color-text)'}}>{previewBill.session_id.split('-')[0]}</strong></p>
+            <p style={{ margin: '0', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>Items Count: <strong style={{color: 'var(--color-text)'}}>{previewBill.bill?.bill_summary?.total_items || 0}</strong></p>
+          </div>
+          
+          <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '16px', borderBottom: '1px solid var(--color-border)' }}>
+            {previewBill.bill?.items?.map((item: any) => (
+              <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid var(--color-border-light)' }}>
+                <span>{item.quantity}x {item.name}</span>
+                <span>₹{(item.unit_price * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: '24px' }}>
+            <span>Total to Collect:</span>
+            <span style={{ color: 'var(--color-primary)' }}>₹{previewBill.bill?.bill_summary?.grand_total || '0.00'}</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button onClick={() => setPreviewBill(null)} variant="secondary" fullWidth disabled={loading}>Cancel</Button>
+            <Button onClick={() => processPayment(previewBill.session_id, previewBill.otp)} fullWidth disabled={loading}>
+              {loading ? <Spinner size={20} /> : <><CheckCircle size={20} /> Confirm Payment</>}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Universal Scanner Toggle */}
       <div style={{ width: '100%', maxWidth: '480px', marginBottom: '24px' }}>
