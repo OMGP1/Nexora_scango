@@ -38,7 +38,7 @@ export class InventoryService {
       
       const res = await client.query(
         `UPDATE inventory_snapshot 
-         SET reserved_qty = reserved_qty + $1, last_updated = CURRENT_TIMESTAMP
+         SET reserved_qty = reserved_qty + $1, available_qty = available_qty - $1, last_updated = CURRENT_TIMESTAMP
          WHERE store_id = $2 AND sku = $3 RETURNING available_qty`,
         [quantity, storeId, sku]
       );
@@ -72,7 +72,7 @@ export class InventoryService {
 
       await client.query(
         `UPDATE inventory_snapshot 
-         SET reserved_qty = reserved_qty - $1, last_updated = CURRENT_TIMESTAMP
+         SET reserved_qty = reserved_qty - $1, available_qty = available_qty + $1, last_updated = CURRENT_TIMESTAMP
          WHERE store_id = $2 AND sku = $3`,
         [quantity, storeId, sku]
       );
