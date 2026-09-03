@@ -19,14 +19,14 @@ RUN npm run build --filter="./services/*"
 EXPOSE 3000
 
 # Start all services using concurrently
-CMD ["concurrently", \
-  "node services/api-gateway/dist/index.js", \
-  "node services/identity-service/dist/main.js", \
-  "node services/session-service/dist/main.js", \
-  "node services/catalog-service/dist/main.js", \
-  "node services/cart-service/dist/main.js", \
-  "node services/payment-service/dist/main.js", \
-  "node services/inventory-service/dist/main.js", \
-  "node services/verification-service/dist/main.js", \
-  "node services/promo-service/dist/main.js" \
-]
+# Start all services using concurrently
+CMD unset PORT && concurrently \
+  "node services/api-gateway/dist/index.js" \
+  "node services/identity-service/dist/main.js" \
+  "node services/session-service/dist/main.js" \
+  "node services/catalog-service/dist/main.js" \
+  "node services/cart-service/dist/main.js" \
+  "node services/payment-service/dist/main.js" \
+  "node services/inventory-service/dist/main.js" \
+  "node services/verification-service/dist/main.js" \
+  "node services/promo-service/dist/main.js"
