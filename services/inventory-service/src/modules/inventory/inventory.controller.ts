@@ -43,6 +43,45 @@ export class InventoryController {
     return { success: true, data };
   }
 
+  @Post(':storeId/reserve')
+  async reserveItem(
+    @Param('storeId') storeId: string,
+    @Body('sku') sku: string,
+    @Body('quantity') quantity: number,
+    @Body('session_id') sessionId: string,
+    @Body('event_id') eventId?: string
+  ) {
+    const eid = eventId || `http-reserve-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    await this.inventoryService.reserveItem(eid, storeId, sku, quantity, sessionId);
+    return { success: true };
+  }
+
+  @Post(':storeId/release')
+  async releaseItem(
+    @Param('storeId') storeId: string,
+    @Body('sku') sku: string,
+    @Body('quantity') quantity: number,
+    @Body('session_id') sessionId: string,
+    @Body('event_id') eventId?: string
+  ) {
+    const eid = eventId || `http-release-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    await this.inventoryService.releaseItem(eid, storeId, sku, quantity, sessionId);
+    return { success: true };
+  }
+
+  @Post(':storeId/confirm-sale')
+  async confirmSale(
+    @Param('storeId') storeId: string,
+    @Body('session_id') sessionId: string,
+    @Body('event_id') eventId?: string
+  ) {
+    const eid = eventId || `http-sale-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const { ErpAdapter } = await import('./erp.adapter');
+    const erpAdapter = new ErpAdapter();
+    await this.inventoryService.confirmSale(eid, sessionId, storeId, erpAdapter);
+    return { success: true };
+  }
+
   @Get(':storeId/ledger')
   async getLedger(@Param('storeId') storeId: string) {
     const data = await this.inventoryService.getLedger(storeId);

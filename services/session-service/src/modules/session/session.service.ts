@@ -204,16 +204,37 @@ export class SessionService {
     
     const result = await this.pool.query(query, params);
     
+    // Fetch cart summaries from Redis
+    const pipeline = this.redis.pipeline();
+    for (const row of result.rows) {
+      pipeline.hget(`cart:${row.session_id}`, 'summary');
+    }
+    const cartSummaries = await pipeline.exec() || [];
+
     // Map database snake_case to API camelCase / expected fields
-    return result.rows.map(row => ({
-      id: row.session_id,
-      store_id: row.store_id,
-      customer_id: row.customer_id,
-      status: row.status.toUpperCase(),
-      created_at: row.created_at,
-      item_count: row.item_count || 0,
-      total_value: row.total_value || 0,
-      verification_status: row.verification_status?.toUpperCase() || 'NOT_REQUIRED'
-    }));
+    return result.rows.map((row, index) => {
+      let total_value = 0;
+      let item_count = 0;
+      
+      try {
+        if (cartSummaries[index] && cartSummaries[index][1]) {
+          const summaryStr = cartSummaries[index][1];
+          const summary = JSON.parse(summaryStr as string);
+          total_value = summary.grand_total || summary.subtotal || 0;
+          item_count = summary.item_count || 0;
+        }
+      } catch (e) {}
+
+      return {
+        id: row.session_id,
+        store_id: row.store_id,
+        customer_id: row.customer_id,
+        status: row.status.toUpperCase(),
+        created_at: row.created_at,
+        item_count,
+        total_value,
+        verification_status: row.verification_status?.toUpperCase() || 'NOT_REQUIRED'
+      };
+    });
   }
 }

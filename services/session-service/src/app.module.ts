@@ -5,6 +5,8 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 
+import { HealthController } from './health.controller';
+
 @Module({
   imports: [
     PrometheusModule.register(),
@@ -15,6 +17,7 @@ import { APP_GUARD } from '@nestjs/core';
     }]),
     SessionModule
   ],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,

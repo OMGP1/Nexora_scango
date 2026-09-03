@@ -38,6 +38,18 @@ export class CartService {
     }
   }
 
+  private get inventoryUrl(): string {
+    return process.env.INVENTORY_SERVICE_URL || 'http://localhost:3005/api/v1/inventory';
+  }
+
+  private async callInventory(action: string, storeId: string, body: any) {
+    try {
+      await firstValueFrom(this.httpService.post(`${this.inventoryUrl}/${storeId}/${action}`, body));
+    } catch (err: any) {
+      console.error(`[cart-service] Inventory ${action} failed:`, err.message);
+    }
+  }
+
   private async getProductInfo(barcode: string): Promise<any> {
     try {
       // Assuming catalog-service is reachable at localhost:3002 internally or via gateway
@@ -166,6 +178,13 @@ export class CartService {
         quantity: cartItem.quantity
       });
 
+      // Direct HTTP call to inventory for the additional quantity
+      await this.callInventory('reserve', 'STORE_001', {
+        sku: cartItem.sku,
+        quantity: quantity,
+        session_id: sessionId
+      });
+
       return { success: true, data: updatedBill };
     } else {
       // 4b. Add new item
@@ -210,6 +229,13 @@ export class CartService {
         requires_verification: cartItem.requires_assisted_verification
       });
 
+      // Direct HTTP call to inventory (Kafka fallback)
+      await this.callInventory('reserve', 'STORE_001', {
+        sku: cartItem.sku,
+        quantity: cartItem.quantity,
+        session_id: sessionId
+      });
+
       return { success: true, data: updatedBill };
     }
   }
@@ -246,6 +272,7 @@ export class CartService {
 
   async removeItem(sessionId: string, itemId: string) {
     let state = await this.getCartState(sessionId);
+    const removedItem = state.items.find(i => i.cart_item_id === itemId);
     state.items = state.items.filter(i => i.cart_item_id !== itemId);
     
     const updatedBill = await this.saveCartState(sessionId, state.items, state.appliedPromo);
@@ -256,6 +283,15 @@ export class CartService {
     );
 
     await this.publishEvent('item.removed', { session_id: sessionId, cart_item_id: itemId });
+
+    // Direct HTTP call to release inventory
+    if (removedItem) {
+      await this.callInventory('release', 'STORE_001', {
+        sku: removedItem.sku,
+        quantity: removedItem.quantity,
+        session_id: sessionId
+      });
+    }
 
     return { success: true, data: updatedBill };
   }

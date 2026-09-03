@@ -252,11 +252,21 @@ export class PaymentService {
 
       // Tell session-service to complete the session
       try {
-        const sessionUrl = process.env.SESSION_SERVICE_URL || 'http://session-service:3002/api/v1/sessions';
+        const sessionUrl = process.env.SESSION_SERVICE_URL || 'http://localhost:3002/api/v1/sessions';
         await firstValueFrom(this.httpService.post(`${sessionUrl}/${payment.session_id}/complete`));
       } catch (err) {
         // Just log the error, don't fail the payment confirmation
         console.error('Failed to mark session as completed', err);
+      }
+
+      // Directly call inventory confirm-sale (Kafka fallback)
+      try {
+        const inventoryUrl = process.env.INVENTORY_SERVICE_URL || 'http://localhost:3005/api/v1/inventory';
+        await firstValueFrom(this.httpService.post(`${inventoryUrl}/STORE_001/confirm-sale`, {
+          session_id: payment.session_id
+        }));
+      } catch (err) {
+        console.error('Failed to confirm inventory sale via HTTP', err);
       }
 
     } catch (e) {
@@ -390,7 +400,7 @@ export class PaymentService {
       if (receipt && receipt.items) {
         const items = typeof receipt.items === 'string' ? JSON.parse(receipt.items) : receipt.items;
         
-        const inventoryUrl = process.env.INVENTORY_SERVICE_URL || 'http://inventory-service:3010/api/v1/inventory';
+        const inventoryUrl = process.env.INVENTORY_SERVICE_URL || 'http://localhost:3005/api/v1/inventory';
         
         for (const item of items) {
           const sku = item.sku || item.id;
