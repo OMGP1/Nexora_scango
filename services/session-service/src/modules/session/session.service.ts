@@ -171,4 +171,32 @@ export class SessionService {
 
     return { success: true, data: { session_id: session.session_id } };
   }
+  async listSessions(storeId: string, verificationStatus?: string) {
+    let query = `
+      SELECT * FROM sessions 
+      WHERE store_id = $1 AND status IN ('active', 'checkout')
+    `;
+    const params: any[] = [storeId];
+    
+    if (verificationStatus) {
+      query += ` AND verification_status = $2`;
+      params.push(verificationStatus);
+    }
+    
+    query += ` ORDER BY created_at DESC`;
+    
+    const result = await this.pool.query(query, params);
+    
+    // Map database snake_case to API camelCase / expected fields
+    return result.rows.map(row => ({
+      id: row.session_id,
+      store_id: row.store_id,
+      customer_id: row.customer_id,
+      status: row.status.toUpperCase(),
+      created_at: row.created_at,
+      item_count: row.item_count || 0,
+      total_value: row.total_value || 0,
+      verification_status: row.verification_status?.toUpperCase() || 'NOT_REQUIRED'
+    }));
+  }
 }

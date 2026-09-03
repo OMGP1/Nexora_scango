@@ -330,6 +330,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_URL=redis://redis:6379
+      - CART_SERVICE_URL=http://cart-service:3004/api/v1/sessions
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_main
@@ -419,6 +420,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_URL=redis://redis:6379
+      - CART_SERVICE_URL=http://cart-service:3004/api/v1/sessions
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - DATABASE_URL=postgres://scango:scango_dev_pass@postgres:5432/scango_main

@@ -6,8 +6,12 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('sessions/:id/payment/intent')
-  async createIntent(@Param('id') sessionId: string) {
-    const data = await this.paymentService.createIntent(sessionId);
+  async createIntent(
+    @Param('id') sessionId: string,
+    @Body('method') method?: string,
+    @Body('customer_id') customerId?: string
+  ) {
+    const data = await this.paymentService.createIntent(sessionId, method || 'card', customerId || 'guest');
     return { success: true, data };
   }
 
@@ -16,7 +20,9 @@ export class PaymentController {
     @Body() payload: any,
     @Headers('stripe-signature') signature: string
   ) {
-    // In test mode, signature might be omitted or passed in custom header
+    if (process.env.NODE_ENV === 'production' && (!signature || signature === 'mock-signature')) {
+      throw new Error('Invalid signature in production');
+    }
     return this.paymentService.handleWebhook(payload, signature || 'mock-signature');
   }
 
@@ -30,5 +36,38 @@ export class PaymentController {
   async refundPayment(@Param('id') paymentId: string) {
     const data = await this.paymentService.refundPayment(paymentId);
     return data;
+  }
+
+  // ── Customer receipts ──────────────────────────────
+
+  @Get('customers/:customerId/receipts')
+  async getCustomerReceipts(@Param('customerId') customerId: string) {
+    const data = await this.paymentService.getCustomerReceipts(customerId);
+    return { success: true, data };
+  }
+
+  @Get('customers/:customerId/receipts/:receiptId')
+  async getCustomerReceiptById(
+    @Param('customerId') customerId: string,
+    @Param('receiptId') receiptId: string
+  ) {
+    const data = await this.paymentService.getCustomerReceiptById(customerId, receiptId);
+    return { success: true, data };
+  }
+
+  // ── Counter payment ────────────────────────────────
+
+  @Post('payment/counter/verify')
+  async verifyCounterPayment(
+    @Body('otp') otp: string,
+    @Body('session_id') sessionId: string
+  ) {
+    const data = await this.paymentService.verifyCounterPayment(sessionId, otp);
+    return { success: true, data };
+  }
+  @Post('payment/exit-pass/validate')
+  async validateExitPass(@Body('token') token: string) {
+    const data = await this.paymentService.validateExitPass(token);
+    return { success: true, data };
   }
 }

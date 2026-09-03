@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Param, Body, Headers } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, Headers, Query } from '@nestjs/common';
 import { SessionService } from './session.service';
 
 @Controller('api/v1/sessions')
@@ -14,6 +14,16 @@ export class SessionController {
   ) {
     const type = role ? 'loyalty' : 'guest';
     return this.sessionService.createSession(storeId, customerId || null, type, deviceFingerprint);
+  }
+
+  @Get()
+  async getSessions(
+    @Query('store_id') storeId: string,
+    @Query('verification_status') verificationStatus: string
+  ) {
+    if (!storeId) storeId = 'STORE_001';
+    const data = await this.sessionService.listSessions(storeId, verificationStatus);
+    return { success: true, data };
   }
 
   @Get(':id')

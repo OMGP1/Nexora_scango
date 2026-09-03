@@ -197,43 +197,53 @@ const routes: RouteConfig[] = [
 
 // ── Cart-scoped session routes (special routing) ───
 // These must be defined BEFORE the catch-all /api/v1/sessions
-app.use(
-  /^\/api\/v1\/sessions\/[^\/]+\/(items|bill|promo)(\/.*)?$/,
-  createProxyMiddleware({
-    target: `http://${getHost('cart-service')}:${SERVICE_PORTS.CART_SERVICE}`,
-    changeOrigin: true,
-    pathRewrite: (_path, req: any) => req.originalUrl,
-  })
-);
 
-app.use(
-  /^\/api\/v1\/sessions\/[^\/]+\/(payment|receipt)(\/.*)?$/,
-  createProxyMiddleware({
-    target: `http://${getHost('payment-service')}:${SERVICE_PORTS.PAYMENT_SERVICE}`,
-    changeOrigin: true,
-    pathRewrite: (_path, req: any) => req.originalUrl,
-  })
-);
+const cartProxy = createProxyMiddleware({
+  target: `http://${getHost('cart-service')}:${SERVICE_PORTS.CART_SERVICE}`,
+  changeOrigin: true,
+  pathRewrite: (_path, req: any) => req.originalUrl,
+});
 
-app.use(
-  /^\/api\/v1\/sessions\/[^\/]+\/verify(\/.*)?$/,
-  createProxyMiddleware({
-    target: `http://${getHost('verification-service')}:${SERVICE_PORTS.VERIFICATION_SERVICE}`,
-    changeOrigin: true,
-    pathRewrite: (_path, req: any) => req.originalUrl,
-  })
-);
+app.post('/api/v1/sessions/:id/items', cartProxy);
+app.patch('/api/v1/sessions/:id/items/:itemId', cartProxy);
+app.delete('/api/v1/sessions/:id/items/:itemId', cartProxy);
+app.get('/api/v1/sessions/:id/bill', cartProxy);
+app.post('/api/v1/sessions/:id/promo', cartProxy);
 
-app.use(
-  /^\/api\/v1\/sessions\/[^\/]+\/(notifications|help)(\/.*)?$/,
-  createProxyMiddleware({
-    target: `http://${getHost('notification-service')}:${SERVICE_PORTS.NOTIFICATION_SERVICE}`,
-    changeOrigin: true,
-    timeout: 0, // No timeout for SSE streams
-    proxyTimeout: 0,
-    pathRewrite: (_path, req: any) => req.originalUrl,
-  })
-);
+const paymentProxy = createProxyMiddleware({
+  target: `http://${getHost('payment-service')}:${SERVICE_PORTS.PAYMENT_SERVICE}`,
+  changeOrigin: true,
+  pathRewrite: (_path, req: any) => req.originalUrl,
+});
+
+app.post('/api/v1/sessions/:id/payment/intent', paymentProxy);
+app.get('/api/v1/sessions/:id/receipt', paymentProxy);
+app.get('/api/v1/customers/:customerId/receipts', paymentProxy);
+app.get('/api/v1/customers/:customerId/receipts/:receiptId', paymentProxy);
+app.post('/api/v1/payment/counter/verify', paymentProxy);
+app.post('/api/v1/payment/webhook', paymentProxy);
+app.post('/api/v1/payment/exit-pass/validate', paymentProxy);
+
+const verificationProxy = createProxyMiddleware({
+  target: `http://${getHost('verification-service')}:${SERVICE_PORTS.VERIFICATION_SERVICE}`,
+  changeOrigin: true,
+  pathRewrite: (_path, req: any) => req.originalUrl,
+});
+
+app.post('/api/v1/sessions/:id/verification/compute', verificationProxy);
+app.get('/api/v1/sessions/:id/verification', verificationProxy);
+app.get('/api/v1/sessions/:id/verification/status', verificationProxy);
+
+const notificationProxy = createProxyMiddleware({
+  target: `http://${getHost('notification-service')}:${SERVICE_PORTS.NOTIFICATION_SERVICE}`,
+  changeOrigin: true,
+  timeout: 0,
+  proxyTimeout: 0,
+  pathRewrite: (_path, req: any) => req.originalUrl,
+});
+
+app.get('/api/v1/sessions/:id/notifications/stream', notificationProxy);
+app.post('/api/v1/sessions/:id/help', notificationProxy);
 
 // Register general proxy routes
 for (const route of routes) {

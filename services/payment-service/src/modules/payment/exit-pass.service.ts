@@ -23,4 +23,19 @@ export class ExitPassService {
     await this.redis.set(`exit_pass:${token}`, JSON.stringify(payload), 'EX', 1800);
     return token;
   }
+  async validateExitPass(token: string): Promise<any> {
+    // Read the token data
+    const dataStr = await this.redis.get(`exit_pass:${token}`);
+    if (!dataStr) {
+      throw new Error('Invalid or expired exit pass');
+    }
+
+    // Single-use guarantee: atomically delete it so it can't be reused
+    const deleted = await this.redis.del(`exit_pass:${token}`);
+    if (deleted !== 1) {
+      throw new Error('Exit pass already used');
+    }
+
+    return JSON.parse(dataStr);
+  }
 }
