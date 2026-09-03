@@ -36,26 +36,33 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addItem = async (barcode: string) => {
     if (!sessionId) return;
-    const response = await api.post(`/sessions/${sessionId}/items`, { barcode });
-    const data = response.data.data;
-    setItems(data.items);
-    setBillSummary(data.bill_summary);
+    try {
+      const response = await api.post(`/sessions/${sessionId}/items`, { barcode });
+      console.log('addItem response:', response.data);
+      // Handle both wrapped and unwrapped response formats
+      const payload = response.data.data ? response.data.data : response.data;
+      setItems(payload.items || []);
+      setBillSummary(payload.bill_summary || null);
+    } catch (err) {
+      console.error('addItem failed:', err);
+      throw err;
+    }
   };
 
   const updateItem = async (itemId: string, quantity: number) => {
     if (!sessionId) return;
     const response = await api.patch(`/sessions/${sessionId}/items/${itemId}`, { quantity });
-    const data = response.data.data;
-    setItems(data.items);
-    setBillSummary(data.bill_summary);
+    const payload = response.data.data ? response.data.data : response.data;
+    setItems(payload.items || []);
+    setBillSummary(payload.bill_summary || null);
   };
 
   const removeItem = async (itemId: string) => {
     if (!sessionId) return;
     const response = await api.delete(`/sessions/${sessionId}/items/${itemId}`);
-    const data = response.data.data;
-    setItems(data.items);
-    setBillSummary(data.bill_summary);
+    const payload = response.data.data ? response.data.data : response.data;
+    setItems(payload.items || []);
+    setBillSummary(payload.bill_summary || null);
   };
 
   return (

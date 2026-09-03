@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useSession } from '../contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ArrowLeft, Plus, Minus } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Button, Card, PageHeader, EmptyState, Spinner } from '@scango/ui';
 import { computeVerificationTier } from '../services/api/verification';
 
 export const CartPage: React.FC = () => {
@@ -36,86 +36,138 @@ export const CartPage: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f4f6' }}>
-      <header style={{ padding: '16px', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <ArrowLeft size={24} />
-        </button>
-        <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>My Cart</h1>
-      </header>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg)' }}>
+      <PageHeader title="My Cart" onBack={() => navigate('/scan')} />
 
-      <main style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+      <main style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', paddingBottom: '24px' }}>
         {items.length === 0 ? (
-          <div style={{ textAlign: 'center', marginTop: '64px', color: '#6b7280' }}>
-            <p>Your cart is empty.</p>
-            <Button onClick={() => navigate('/scan')} style={{ marginTop: '16px', width: 'auto' }}>Start Scanning</Button>
-          </div>
+          <EmptyState
+            icon={<ShoppingBag size={48} />}
+            title="Your cart is empty"
+            description="Start scanning products to add them to your cart."
+            action={<Button onClick={() => navigate('/scan')}>Start Scanning</Button>}
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {items.map(item => (
-              <div key={item.cart_item_id} style={{ backgroundColor: '#fff', padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <div>
-                  <div style={{ fontWeight: 600 }}>{item.name}</div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>₹{item.unit_price} {item.weight ? 'per kg' : 'each'}</div>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '4px' }}>
-                    <button onClick={() => updateItem(item.cart_item_id, item.quantity - 1)} disabled={item.quantity <= 1} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer' }}><Minus size={16} /></button>
-                    <span style={{ minWidth: '24px', textAlign: 'center' }}>{item.quantity}</span>
-                    <button onClick={() => updateItem(item.cart_item_id, item.quantity + 1)} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer' }}><Plus size={16} /></button>
-                  </div>
-                  <div style={{ fontWeight: 600, minWidth: '60px', textAlign: 'right' }}>₹{item.line_total}</div>
-                  <button onClick={() => removeItem(item.cart_item_id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '8px' }}>
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          <>
+            {/* Cart Items */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {items.map(item => (
+                <Card key={item.cart_item_id} padding="md">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    {/* Product info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {/* Product circle avatar */}
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 'var(--radius-full)',
+                            backgroundColor: 'var(--color-bg-warm-accent)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            fontSize: 'var(--font-size-xl)',
+                          }}
+                        >
+                          {item.name?.charAt(0) || '?'}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontWeight: 600, fontSize: 'var(--font-size-base)', margin: 0, color: 'var(--color-text)' }}>
+                            {item.name}
+                          </p>
+                          <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', margin: '2px 0 0 0' }}>
+                            ₹{item.unit_price} {item.weight ? 'per kg' : 'each'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-        {items.length > 0 && billSummary && (
-          <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '16px', marginTop: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.125rem' }}>Bill Summary</h2>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#4b5563' }}>
-              <span>Subtotal</span>
-              <span>₹{billSummary.subtotal}</span>
+                    {/* Price */}
+                    <p style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', margin: 0, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
+                      ₹{item.line_total}
+                    </p>
+                  </div>
+
+                  {/* Actions row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-border-light)' }}>
+                    <button
+                      onClick={() => removeItem(item.cart_item_id)}
+                      style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-xs)' }}
+                    >
+                      <Trash2 size={14} />
+                      Remove
+                    </button>
+
+                    {/* Quantity controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                      <button
+                        onClick={() => updateItem(item.cart_item_id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                        style={{ background: 'none', border: 'none', padding: '6px 12px', cursor: 'pointer', color: 'var(--color-text)', opacity: item.quantity <= 1 ? 0.3 : 1 }}
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span style={{ minWidth: '32px', textAlign: 'center', fontWeight: 600, fontSize: 'var(--font-size-sm)', color: 'var(--color-text)' }}>
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateItem(item.cart_item_id, item.quantity + 1)}
+                        style={{ background: 'none', border: 'none', padding: '6px 12px', cursor: 'pointer', color: 'var(--color-text)' }}
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#4b5563' }}>
-              <span>Taxes</span>
-              <span>₹{billSummary.tax_total}</span>
-            </div>
-            {billSummary.discount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#10b981' }}>
-                <span>Discount</span>
-                <span>-₹{billSummary.discount}</span>
-              </div>
+
+            {/* Order Summary */}
+            {billSummary && (
+              <Card padding="lg">
+                <h2 style={{ margin: '0 0 16px 0', fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--color-text)' }}>
+                  Order Summary
+                </h2>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>Subtotal</span>
+                  <span style={{ color: 'var(--color-text)', fontSize: 'var(--font-size-sm)' }}>₹{billSummary.subtotal}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>Taxes</span>
+                  <span style={{ color: 'var(--color-text)', fontSize: 'var(--font-size-sm)' }}>₹{billSummary.tax_total}</span>
+                </div>
+                {billSummary.discount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ color: 'var(--color-success)', fontSize: 'var(--font-size-sm)' }}>Promo discount</span>
+                    <span style={{ color: 'var(--color-success)', fontSize: 'var(--font-size-sm)' }}>-₹{billSummary.discount}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+                  <span style={{ fontWeight: 700, fontSize: 'var(--font-size-xl)', color: 'var(--color-text)' }}>Total</span>
+                  <span style={{ fontWeight: 700, fontSize: 'var(--font-size-xl)', color: 'var(--color-text)' }}>₹{billSummary.grand_total}</span>
+                </div>
+
+                <div style={{ marginTop: '24px' }}>
+                  <Button
+                    onClick={handleCheckout}
+                    disabled={items.length === 0 || loadingCheckout}
+                    fullWidth
+                    size="lg"
+                  >
+                    {loadingCheckout ? (
+                      <><Spinner size={18} color="var(--color-text-inverse)" /> Verifying...</>
+                    ) : (
+                      'Checkout'
+                    )}
+                  </Button>
+                </div>
+              </Card>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #e5e7eb', fontWeight: 700, fontSize: '1.25rem' }}>
-              <span>Grand Total</span>
-              <span>₹{billSummary.grand_total}</span>
-            </div>
-            
-            <div style={{ marginTop: '24px' }}>
-              <Button 
-                onClick={handleCheckout} 
-                disabled={items.length === 0 || loadingCheckout} 
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  fontSize: '1.125rem',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '8px',
-                  opacity: (items.length === 0 || loadingCheckout) ? 0.7 : 1
-                }}
-              >
-                {loadingCheckout ? 'Verifying...' : 'Proceed to Checkout'}
-              </Button>
-            </div>
-          </div>
+          </>
         )}
       </main>
     </div>

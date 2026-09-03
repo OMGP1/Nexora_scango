@@ -21,7 +21,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!sessionId) return;
 
     const token = localStorage.getItem('token') || '';
-    const eventSourceUrl = `http://localhost:3000/api/v1/sessions/${sessionId}/notifications/stream?token=${token}`;
+    const eventSourceUrl = `/api/v1/sessions/${sessionId}/notifications/stream?token=${token}`;
     const eventSource = new EventSource(eventSourceUrl);
 
     eventSource.onmessage = (event) => {

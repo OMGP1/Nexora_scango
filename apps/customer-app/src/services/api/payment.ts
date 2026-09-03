@@ -1,28 +1,24 @@
-const PAYMENT_SERVICE_URL = import.meta.env.VITE_PAYMENT_SERVICE_URL || 'http://localhost:3000/api/v1';
+import api from '../api';
 
-export const createPaymentIntent = async (sessionId: string) => {
-  const res = await fetch(`${PAYMENT_SERVICE_URL}/sessions/${sessionId}/payment/intent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  });
-  if (!res.ok) throw new Error('Failed to create payment intent');
-  return res.json();
+export const createPaymentIntent = async (sessionId: string, method: string = 'card', customerId?: string) => {
+  const res = await api.post(`/sessions/${sessionId}/payment/intent`, { method, customer_id: customerId });
+  return res.data;
 };
 
 export const simulateWebhook = async (gatewayRef: string) => {
-  const res = await fetch(`${PAYMENT_SERVICE_URL}/payment/webhook`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ gateway_ref: gatewayRef, status: 'succeeded' })
+  const res = await api.post(`/payment/webhook`, {
+    gateway_ref: gatewayRef,
+    status: 'succeeded'
   });
-  if (!res.ok) throw new Error('Failed to simulate webhook');
-  return res.json();
+  return res.data;
 };
 
 export const getReceipt = async (sessionId: string) => {
-  const res = await fetch(`${PAYMENT_SERVICE_URL}/sessions/${sessionId}/receipt`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  if (!res.ok) throw new Error('Failed to fetch receipt');
-  return res.json();
+  const res = await api.get(`/sessions/${sessionId}/receipt`);
+  return res.data;
+};
+
+export const getCustomerReceiptById = async (customerId: string, receiptId: string) => {
+  const res = await api.get(`/customers/${customerId}/receipts/${receiptId}`);
+  return res.data;
 };

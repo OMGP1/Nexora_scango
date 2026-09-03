@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useSession } from '../contexts/SessionContext';
-import { Button } from '../components/ui/Button';
-import { QrCode } from 'lucide-react';
+import { Button } from '@scango/ui';
+import { ArrowRight } from 'lucide-react';
 
 export const EntryPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { loginGuest } = useAuth();
-  const { createSession } = useSession();
-  
-  const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
+
   const [storeId, setStoreId] = useState<string>('STORE_001');
 
   useEffect(() => {
@@ -19,44 +16,110 @@ export const EntryPage: React.FC = () => {
     if (storeIdParam) setStoreId(storeIdParam);
   }, [searchParams]);
 
-  const handleStart = async () => {
-    setLoading(true);
-    try {
-      await loginGuest(storeId);
-      const existingSessionId = localStorage.getItem('session_id');
-      if (!existingSessionId) {
-        await createSession(storeId);
-      }
+  const handleStart = () => {
+    localStorage.setItem('store_id', storeId);
+    if (isAuthenticated) {
       navigate('/scan');
-    } catch (e: any) {
-      if (e.response?.status === 409) {
-        // Session already exists for this device, just proceed
-        navigate('/scan');
-      } else {
-        console.error('Failed to start session', e);
-        alert('Could not start session. Please try again.');
-      }
-    } finally {
-      setLoading(false);
+    } else {
+      navigate('/login');
     }
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #4f46e5 0%, #10b981 100%)', color: 'white', padding: '24px' }}>
-      <div style={{ marginBottom: '48px', textAlign: 'center' }}>
-        <QrCode size={80} style={{ marginBottom: '24px', opacity: 0.9 }} />
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 800, margin: '0 0 8px 0' }}>ScanGo</h1>
-        <p style={{ fontSize: '1.125rem', opacity: 0.8, margin: 0 }}>Skip the line. Scan and go.</p>
-      </div>
-
-      <div style={{ width: '100%', maxWidth: '320px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '24px', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
-        <p style={{ textAlign: 'center', marginBottom: '24px', fontSize: '0.875rem' }}>
-          Welcome to {storeId === 'STORE_001' ? 'SuperMart' : 'Store'}
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--color-bg)',
+        padding: '24px',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          textAlign: 'center',
+          animation: 'scango-fade-in 0.5s ease-out',
+        }}
+      >
+        {/* Wordmark */}
+        <h1
+          style={{
+            fontSize: 'var(--font-size-4xl)',
+            fontWeight: 700,
+            color: 'var(--color-text)',
+            letterSpacing: 'var(--letter-spacing-tight)',
+            margin: '0 0 8px 0',
+          }}
+        >
+          ScanGo
+        </h1>
+        <p
+          style={{
+            fontSize: 'var(--font-size-lg)',
+            color: 'var(--color-text-muted)',
+            margin: '0 0 48px 0',
+            fontWeight: 400,
+          }}
+        >
+          Skip the line. Scan and go.
         </p>
-        
-        <Button onClick={handleStart} disabled={loading} style={{ backgroundColor: '#fff', color: '#4f46e5' }}>
-          {loading ? 'Starting...' : 'Start Shopping'}
-        </Button>
+
+        {/* Store info card */}
+        <div
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '32px 24px',
+            boxShadow: 'var(--shadow-card)',
+            marginBottom: '32px',
+          }}
+        >
+          <p
+            style={{
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-muted)',
+              margin: '0 0 4px 0',
+              textTransform: 'uppercase',
+              letterSpacing: 'var(--letter-spacing-wide)',
+              fontWeight: 500,
+            }}
+          >
+            Welcome to
+          </p>
+          <p
+            style={{
+              fontSize: 'var(--font-size-2xl)',
+              fontWeight: 700,
+              color: 'var(--color-text)',
+              margin: '0 0 24px 0',
+            }}
+          >
+            {storeId === 'STORE_001' ? 'SuperMart' : 'Store'}
+          </p>
+
+          <Button
+            onClick={handleStart}
+            fullWidth
+            size="lg"
+          >
+            Start Shopping
+            <ArrowRight size={18} />
+          </Button>
+        </div>
+
+        <p
+          style={{
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-text-muted)',
+            margin: 0,
+          }}
+        >
+          Scan products • Pay in-app • Walk out
+        </p>
       </div>
     </div>
   );
