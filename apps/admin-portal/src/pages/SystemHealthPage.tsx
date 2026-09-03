@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Card, StatusDot, Button } from '@scango/ui';
 import { ExternalLink, RefreshCw } from 'lucide-react';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+
+const SERVICE_HEALTH_ENDPOINTS = [
+  { name: 'API Gateway', path: '/health' },
+  { name: 'Identity Service', path: `${API_BASE}/identity-service/health` },
+  { name: 'Session Service', path: `${API_BASE}/session-service/health` },
+  { name: 'Cart Service', path: `${API_BASE}/cart-service/health` },
+  { name: 'Catalog Service', path: `${API_BASE}/catalog-service/health` },
+  { name: 'Payment Service', path: `${API_BASE}/payment-service/health` },
+  { name: 'Inventory Service', path: `${API_BASE}/inventory-service/health` },
+  { name: 'Verification Service', path: `${API_BASE}/verification-service/health` },
+  { name: 'Notification Service', path: `${API_BASE}/notification-service/health` },
+  { name: 'Audit Service', path: `${API_BASE}/audit-service/health` },
+  { name: 'Analytics Service', path: `${API_BASE}/analytics-service/health` },
+];
 
 export const SystemHealthPage: React.FC = () => {
   const [health, setHealth] = useState<any>(null);
@@ -10,26 +27,23 @@ export const SystemHealthPage: React.FC = () => {
   const fetchHealth = async () => {
     setRefreshing(true);
     try {
-      // Mock health check since we don't have a real aggregated health endpoint yet
-      setTimeout(() => {
-        setHealth({
-          status: 'healthy',
-          services: [
-            { name: 'API Gateway', status: 'healthy', latency: '12ms' },
-            { name: 'Auth Service', status: 'healthy', latency: '24ms' },
-            { name: 'Cart Service', status: 'healthy', latency: '18ms' },
-            { name: 'Catalog Service', status: 'healthy', latency: '35ms' },
-            { name: 'Payment Service', status: 'healthy', latency: '42ms' },
-            { name: 'Verification Service', status: 'healthy', latency: '15ms' },
-            { name: 'MongoDB Atlas', status: 'healthy', latency: '58ms' },
-            { name: 'PostgreSQL', status: 'healthy', latency: '8ms' },
-            { name: 'Redis Cache', status: 'healthy', latency: '2ms' },
-          ]
-        });
-        setLastUpdated(new Date());
-        setRefreshing(false);
-      }, 800);
+      const results = await Promise.all(
+        SERVICE_HEALTH_ENDPOINTS.map(async (svc) => {
+          const start = Date.now();
+          try {
+            await axios.get(svc.path, { timeout: 5000 });
+            return { name: svc.name, status: 'healthy', latency: `${Date.now() - start}ms` };
+          } catch {
+            return { name: svc.name, status: 'unhealthy', latency: `${Date.now() - start}ms` };
+          }
+        })
+      );
+      const allHealthy = results.every(r => r.status === 'healthy');
+      setHealth({ status: allHealthy ? 'healthy' : 'degraded', services: results });
+      setLastUpdated(new Date());
     } catch (e) {
+      console.error('Health check failed', e);
+    } finally {
       setRefreshing(false);
     }
   };

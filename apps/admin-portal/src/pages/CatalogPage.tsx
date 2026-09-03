@@ -119,7 +119,21 @@ export const CatalogPage: React.FC = () => {
                         <Button size="sm" onClick={() => handleSavePrice(item.sku)}>Save</Button>
                       </div>
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={() => { setEditingId(item.sku); setEditPrice(item.unit_price); }}>Edit</Button>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditingId(item.sku); setEditPrice(item.unit_price); }}>Edit</Button>
+                        <Button variant="outline" size="sm" onClick={async () => {
+                          if (window.confirm('Delete this product?')) {
+                            try {
+                              await adminApi.deleteProduct(item.sku);
+                              setItems(items.filter(i => i.sku !== item.sku));
+                              setToast({ visible: true, message: 'Deleted successfully', type: 'success' });
+                            } catch {
+                              setToast({ visible: true, message: 'Delete failed', type: 'error' });
+                            }
+                            setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
+                          }
+                        }}>Delete</Button>
+                      </div>
                     )}
                   </td>
                 </tr>

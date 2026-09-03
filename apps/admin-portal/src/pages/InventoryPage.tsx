@@ -27,9 +27,13 @@ export const InventoryPage: React.FC = () => {
 
   const storeId = 'STORE_001';
 
+  const [activeTab, setActiveTab] = useState<'stock' | 'ledger'>('stock');
+  const [ledger, setLedger] = useState<any[]>([]);
+
   useEffect(() => {
-    loadInventory();
-  }, []);
+    if (activeTab === 'stock') loadInventory();
+    else loadLedger();
+  }, [activeTab]);
 
   const loadInventory = async () => {
     setLoading(true);
@@ -38,6 +42,18 @@ export const InventoryPage: React.FC = () => {
       setInventory(data);
     } catch {
       setToast({ visible: true, message: 'Failed to load inventory', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadLedger = async () => {
+    setLoading(true);
+    try {
+      const data = await adminApi.fetchLedger(storeId);
+      setLedger(data);
+    } catch {
+      setToast({ visible: true, message: 'Failed to load ledger', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -114,6 +130,21 @@ export const InventoryPage: React.FC = () => {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', borderBottom: '1px solid var(--color-border)' }}>
+        <button
+          onClick={() => setActiveTab('stock')}
+          style={{ padding: '8px 4px', background: 'none', border: 'none', borderBottom: activeTab === 'stock' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'stock' ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: activeTab === 'stock' ? 600 : 500, cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}
+        >
+          Current Stock
+        </button>
+        <button
+          onClick={() => setActiveTab('ledger')}
+          style={{ padding: '8px 4px', background: 'none', border: 'none', borderBottom: activeTab === 'ledger' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'ledger' ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: activeTab === 'ledger' ? 600 : 500, cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}
+        >
+          Audit Ledger
+        </button>
+      </div>
+
       <Card padding="lg">
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
@@ -121,12 +152,12 @@ export const InventoryPage: React.FC = () => {
             <input type="text" placeholder="Search by SKU..." value={search} onChange={e => setSearch(e.target.value)}
               style={{ ...inputStyle, paddingLeft: '40px' }} />
           </div>
-          <Button variant="ghost" onClick={loadInventory}><BarChart3 size={16} /> Refresh</Button>
+          <Button variant="ghost" onClick={activeTab === 'stock' ? loadInventory : loadLedger}><BarChart3 size={16} /> Refresh</Button>
         </div>
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Spinner size={32} /></div>
-        ) : (
+        ) : activeTab === 'stock' ? (
           <div className="table-responsive">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
               <thead>
@@ -146,6 +177,45 @@ export const InventoryPage: React.FC = () => {
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: item.available_qty < 10 ? 'var(--color-danger)' : 'var(--color-text)' }}>{item.available_qty}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--color-text-secondary)' }}>{item.reserved_qty}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>{item.last_updated ? new Date(item.last_updated).toLocaleString() : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase' }}>Time</th>
+                  <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase' }}>SKU</th>
+                  <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase' }}>Type</th>
+                  <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase' }}>Delta</th>
+                  <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase' }}>Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledger.length === 0 ? (
+                  <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>No ledger entries found.</td></tr>
+                ) : ledger.filter(l => l.sku.toLowerCase().includes(search.toLowerCase())).map(item => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid var(--color-border-light)' }}>
+                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>{new Date(item.timestamp).toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-family-mono)', fontSize: 'var(--font-size-xs)' }}>{item.sku}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span style={{ 
+                        padding: '2px 8px', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 600,
+                        backgroundColor: item.movement_type === 'SALE' ? 'var(--color-danger-light)' : (item.movement_type === 'RECEIVED' ? 'var(--color-success-light)' : 'var(--color-bg-secondary)'),
+                        color: item.movement_type === 'SALE' ? 'var(--color-danger)' : (item.movement_type === 'RECEIVED' ? 'var(--color-success)' : 'var(--color-text)')
+                      }}>
+                        {item.movement_type}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: item.quantity_delta > 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                      {item.quantity_delta > 0 ? '+' : ''}{item.quantity_delta}
+                    </td>
+                    <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>
+                      {item.session_id || item.adjusted_by || item.received_by || '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -38,6 +38,21 @@ export const adminApi = {
     return res.data.data || [];
   },
 
+  fetchHeldSessions: async (storeId: string = 'STORE_001') => {
+    const res = await api.get('/sessions', { params: { store_id: storeId, verification_status: 'HELD' } });
+    return res.data.data || [];
+  },
+
+  pauseSession: async (id: string) => {
+    const res = await api.post(`/sessions/${id}/pause`);
+    return res.data;
+  },
+
+  resumeSession: async (id: string) => {
+    const res = await api.post(`/sessions/${id}/resume`);
+    return res.data;
+  },
+
   fetchVerificationQueue: async (storeId: string = 'STORE_001'): Promise<Session[]> => {
     const res = await api.get('/sessions', { params: { store_id: storeId, verification_status: 'HELD' } });
     return res.data.data || [];

@@ -26,6 +26,7 @@ export const SessionsListPage: React.FC = () => {
                 <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Verification</th>
                 <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Items</th>
                 <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Value</th>
+                <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wide)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -40,6 +41,24 @@ export const SessionsListPage: React.FC = () => {
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--color-text)' }}>{s.item_count || 0}</td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--color-text)' }}>\u20B9{s.total_value || 0}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                    {s.status === 'ACTIVE' && (
+                      <button 
+                        onClick={() => adminApi.pauseSession(s.id).then(() => adminApi.fetchActiveSessions().then(setSessions))}
+                        style={{ padding: '4px 8px', fontSize: 'var(--font-size-xs)', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'var(--color-bg)', cursor: 'pointer', color: 'var(--color-text-secondary)' }}
+                      >
+                        Pause
+                      </button>
+                    )}
+                    {s.status === 'PAUSED' && (
+                      <button 
+                        onClick={() => adminApi.resumeSession(s.id).then(() => adminApi.fetchActiveSessions().then(setSessions))}
+                        style={{ padding: '4px 8px', fontSize: 'var(--font-size-xs)', border: '1px solid var(--color-primary)', borderRadius: '4px', background: 'var(--color-primary-light)', cursor: 'pointer', color: 'var(--color-primary)' }}
+                      >
+                        Resume
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

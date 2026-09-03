@@ -2,16 +2,32 @@ import React, { useState } from 'react';
 import { Scanner } from '../components/Scanner';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useSession } from '../contexts/SessionContext';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Check, LogOut, FileText } from 'lucide-react';
+import { ShoppingCart, Check, LogOut, FileText, HelpCircle } from 'lucide-react';
 import { Button, PageHeader, BottomBar, Card, Input } from '@scango/ui';
+import api from '../services/api';
 
 export const ScanPage: React.FC = () => {
   const { addItem, billSummary } = useCart();
   const { logout } = useAuth();
+  const { sessionId } = useSession();
   const navigate = useNavigate();
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [manualBarcode, setManualBarcode] = useState('');
+  const [helpRequested, setHelpRequested] = useState(false);
+
+  const requestHelp = async () => {
+    if (!sessionId || helpRequested) return;
+    try {
+      setHelpRequested(true);
+      await api.post(`/sessions/${sessionId}/help`);
+      setTimeout(() => setHelpRequested(false), 60000); // disable for 1 min
+    } catch (e) {
+      console.error('Failed to request help', e);
+      setHelpRequested(false);
+    }
+  };
 
   const handleScan = async (barcode: string) => {
     try {
@@ -96,6 +112,25 @@ export const ScanPage: React.FC = () => {
             </Button>
           </div>
         </Card>
+      </div>
+
+      {/* Help Button */}
+      <div style={{ position: 'fixed', bottom: 'var(--bottom-bar-height)', right: '16px', transform: 'translateY(-16px)', zIndex: 100 }}>
+        <button 
+          onClick={requestHelp}
+          disabled={helpRequested}
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '8px',
+            backgroundColor: helpRequested ? 'var(--color-success)' : 'var(--color-bg-card)',
+            color: helpRequested ? 'white' : 'var(--color-primary)',
+            padding: '12px 16px', borderRadius: '30px', border: helpRequested ? 'none' : '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-card)', fontWeight: 600, fontSize: 'var(--font-size-sm)', cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          {helpRequested ? <Check size={18} /> : <HelpCircle size={18} />}
+          {helpRequested ? 'Help on the way' : 'Need Help?'}
+        </button>
       </div>
 
       {/* Bottom bar */}
