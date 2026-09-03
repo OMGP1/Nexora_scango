@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm install -g concurrently
 
 # Copy package files
-COPY package.json package-lock.json turbo.json ./
+COPY package.json package-lock.json turbo.json tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY services/ ./services/
 COPY ca.pem ./
