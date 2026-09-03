@@ -339,6 +339,6 @@ app.use((_req, res) => {
 
 // ── Start Server ───────────────────────────────────
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   logger.info({ port: PORT, routes: routes.length }, 'API Gateway is running');
 });
