@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "cd ../../packages/common && npm run build && cd ../ui && npm run build",
     "dev": "vite --port 5173",
     "build": "vite build",
     "preview": "vite preview",
