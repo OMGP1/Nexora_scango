@@ -10,7 +10,7 @@ export class LoyaltyConsumer implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly loyaltyService: LoyaltyService) {
     const kafka = createKafkaClient({
       clientId: 'promo-service',
-      brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+      brokers: [process.env.KAFKA_BROKERS || process.env.KAFKA_BROKER || 'localhost:9092'],
     });
     this.consumer = kafka.consumer({ groupId: 'promo-loyalty-group' });
   }

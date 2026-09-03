@@ -13,7 +13,7 @@ export class GateService {
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
     const kafka = createKafkaClient({
       clientId: 'verification-service-gate',
-      brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+      brokers: [process.env.KAFKA_BROKERS || process.env.KAFKA_BROKER || 'localhost:9092'],
     });
     this.kafkaProducer = kafka.producer();
     this.kafkaProducer.connect().catch((err: any) => console.error('Kafka connect error', err));

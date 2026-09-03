@@ -10,7 +10,7 @@ export class SessionExpiryJob {
   constructor(@Inject('DB_POOL') private pool: Pool) {
     const kafka = createKafkaClient({
       clientId: 'session-expiry-job',
-      brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+      brokers: [process.env.KAFKA_BROKERS || process.env.KAFKA_BROKER || 'localhost:9092'],
     });
     this.kafkaProducer = kafka.producer();
     this.kafkaProducer.connect().catch((err: any) => console.error('Kafka connect error', err));

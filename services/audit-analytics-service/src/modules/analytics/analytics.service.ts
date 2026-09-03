@@ -17,7 +17,7 @@ export class AnalyticsService implements OnModuleInit, OnModuleDestroy {
   ) {
     this.kafka = createKafkaClient({
       clientId: 'analytics-service',
-      brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+      brokers: [process.env.KAFKA_BROKERS || process.env.KAFKA_BROKER || 'localhost:9092'],
     });
     this.consumer = this.kafka.consumer({ groupId: 'analytics-group' });
   }
