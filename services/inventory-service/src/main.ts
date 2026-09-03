@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3005;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  await app.listen(PORT);
+  await app.listen(PORT, '0.0.0.0');
   logger.info({ port: PORT }, 'inventory-service is running');
 }
 

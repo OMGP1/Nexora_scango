@@ -11,7 +11,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.enableCors();
-  await app.listen(PORT);
+  await app.listen(PORT, '0.0.0.0');
   logger.info({ port: PORT }, 'payment-service is running');
 }
 
