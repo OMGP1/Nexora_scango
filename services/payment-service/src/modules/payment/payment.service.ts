@@ -1,7 +1,6 @@
 import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Pool } from 'pg';
 import { HttpService } from '@nestjs/axios';
-import { Kafka } from 'kafkajs';
 import { createKafkaClient } from '@scango/kafka';
 import { firstValueFrom } from 'rxjs';
 import { StripeAdapter } from './adapters/stripe.adapter';

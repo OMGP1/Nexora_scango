@@ -1,7 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Pool } from 'pg';
-import { Kafka } from 'kafkajs';
 import { createKafkaClient } from '@scango/kafka';
 
 @Injectable()

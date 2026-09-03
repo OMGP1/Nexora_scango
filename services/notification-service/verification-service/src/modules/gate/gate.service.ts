@@ -1,6 +1,5 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
-import { Kafka } from 'kafkajs';
 import { createKafkaClient } from '@scango/kafka';
 import { VerificationService } from '../verification/verification.service';
 

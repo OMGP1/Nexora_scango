@@ -1,5 +1,4 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import { Kafka } from 'kafkajs';
 import { createKafkaClient } from '@scango/kafka';
 import { InventoryService } from './inventory.service';
 import { ErpAdapter } from './erp.adapter';
