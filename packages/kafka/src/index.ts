@@ -17,10 +17,18 @@ export interface KafkaConfig {
  * Create a Kafka client instance
  */
 export function createKafkaClient(config: KafkaConfig): Kafka {
+  const saslConfig = process.env.KAFKA_USERNAME && process.env.KAFKA_PASSWORD ? {
+    mechanism: 'plain' as const,
+    username: process.env.KAFKA_USERNAME,
+    password: process.env.KAFKA_PASSWORD,
+  } : undefined;
+
   return new Kafka({
     clientId: config.clientId,
     brokers: config.brokers,
     logLevel: logLevel.WARN,
+    ssl: !!saslConfig,
+    ...(saslConfig && { sasl: saslConfig }),
     retry: {
       initialRetryTime: 300,
       retries: 8,

@@ -1,0 +1,31 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install concurrently to run multiple services
+RUN npm install -g concurrently
+
+# Copy package files
+COPY package.json package-lock.json turbo.json ./
+COPY packages/ ./packages/
+COPY services/ ./services/
+
+# Install dependencies and build
+RUN npm install
+RUN npm run build --filter="./services/*"
+
+# Expose API Gateway port
+EXPOSE 3000
+
+# Start all services using concurrently
+CMD ["concurrently", \
+  "node services/api-gateway/dist/index.js", \
+  "node services/identity-service/dist/main.js", \
+  "node services/session-service/dist/main.js", \
+  "node services/catalog-service/dist/main.js", \
+  "node services/cart-service/dist/main.js", \
+  "node services/payment-service/dist/main.js", \
+  "node services/inventory-service/dist/main.js", \
+  "node services/verification-service/dist/main.js", \
+  "node services/promo-service/dist/main.js" \
+]
